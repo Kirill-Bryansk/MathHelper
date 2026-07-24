@@ -1,0 +1,124 @@
+/* Общие стили приложения */
+
+.root {
+    -fx-background-color: #f5f5f5;
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+}
+
+/* Заголовки */
+.label-title {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+}
+
+/* Поля ввода */
+.text-field {
+    -fx-background-color: white;
+    -fx-border-color: #bdc3c7;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-padding: 8px;
+}
+
+.text-field:focused {
+    -fx-border-color: #3498db;
+    -fx-border-width: 2px;
+}
+
+/* Область вывода */
+.text-area {
+    -fx-background-color: white;
+    -fx-border-color: #bdc3c7;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+}
+
+.text-area .content {
+    -fx-background-color: white;
+}
+
+/* Список шагов */
+.list-view {
+    -fx-background-color: white;
+    -fx-border-color: #bdc3c7;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+}
+
+.list-cell {
+    -fx-padding: 8px 10px;
+    -fx-background-color: transparent;
+}
+
+.list-cell:odd {
+    -fx-background-color: #f8f9fa;
+}
+
+.list-cell:hover {
+    -fx-background-color: #e8f4fd;
+}
+
+/* Кнопки */
+.button {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 8px 20px;
+    -fx-background-radius: 5px;
+    -fx-cursor: hand;
+}
+
+/* Кнопка "Решить" */
+#solveButton {
+    -fx-background-color: #27ae60;
+    -fx-text-fill: white;
+}
+
+#solveButton:hover {
+    -fx-background-color: #2ecc71;
+}
+
+#solveButton:pressed {
+    -fx-background-color: #1e8449;
+}
+
+/* Кнопка "Очистить" */
+#clearButton {
+    -fx-background-color: #f39c12;
+    -fx-text-fill: white;
+}
+
+#clearButton:hover {
+    -fx-background-color: #f1c40f;
+}
+
+#clearButton:pressed {
+    -fx-background-color: #d68910;
+}
+
+/* Кнопка "Выход" */
+#exitButton {
+    -fx-background-color: #e74c3c;
+    -fx-text-fill: white;
+}
+
+#exitButton:hover {
+    -fx-background-color: #e74c3c;
+    -fx-opacity: 0.8;
+}
+
+#exitButton:pressed {
+    -fx-background-color: #c0392b;
+}
+
+/* Статусная строка */
+#statusLabel {
+    -fx-font-size: 14px;
+    -fx-text-fill: #7f8c8d;
+}
+
+/* Разделитель */
+.separator .line {
+    -fx-border-color: #bdc3c7;
+    -fx-border-width: 1px;
+}
