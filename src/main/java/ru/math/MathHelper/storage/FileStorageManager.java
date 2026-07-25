@@ -50,6 +50,7 @@ public class FileStorageManager implements StorageManager {
 
         } catch (IOException e) {
             log.error("Ошибка сохранения истории", e);
+            throw new RuntimeException("Не удалось сохранить историю", e);
         }
     }
 
@@ -80,7 +81,7 @@ public class FileStorageManager implements StorageManager {
 
         } catch (IOException e) {
             log.error("Ошибка загрузки истории", e);
-            return new ArrayList<>();
+            throw new RuntimeException("Не удалось загрузить историю", e);
         }
     }
 

@@ -45,15 +45,10 @@ public class MainController {
      * FXML loader создаёт контроллер автоматически,
      * поэтому зависимости передаются вручную.
      */
-    public void initWithServices() {
+    public void initWithServices(EquationService equationService, HistoryService historyService) {
         log.info("🔄 Инициализация MainController с сервисами");
-        this.equationService = new EquationService(
-            new ru.math.MathHelper.core.parser.LinearEquationParser(),
-            new ru.math.MathHelper.core.solver.LinearEquationSolver()
-        );
-        this.historyService = new HistoryService(
-            new ru.math.MathHelper.storage.FileStorageManager("history.json")
-        );
+        this.equationService = equationService;
+        this.historyService = historyService;
     }
 
     /**

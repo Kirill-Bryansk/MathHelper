@@ -3,52 +3,40 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.Font?>
 
 <VBox xmlns="http://javafx.com/javafx/21"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="ru.math.MathHelper.ui.controller.MainController"
-      spacing="10"
-      style="-fx-background-color: #f5f5f5;">
+      spacing="10">
 
     <padding>
         <Insets top="15" right="15" bottom="15" left="15"/>
     </padding>
 
     <!-- ===== Заголовок ===== -->
-    <Label text="🐒🙈🙉🙊 Специально для двоишников гимназистов"
-           style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+    <Label text="🙈🙉🙊 Специально для двоишников гимназистов. Да да Арина 🐒"
+           styleClass="label-title"/>
 
     <Separator/>
 
     <!-- ===== Статусная строка ===== -->
     <Label fx:id="statusLabel"
-           text="Готов к работе"
-           style="-fx-font-size: 14px; -fx-text-fill: #7f8c8d;"/>
+           text="Готов к работе"/>
 
     <!-- ===== Строка ввода ===== -->
     <HBox spacing="10" alignment="CENTER_LEFT">
         <Label text="Введите уравнение:"
-               style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+               styleClass="label-input"/>
         <TextField fx:id="equationInput"
-                   HBox.hgrow="ALWAYS"
-                   style="-fx-font-size: 14px; -fx-padding: 8px;"/>
+                   HBox.hgrow="ALWAYS"/>
     </HBox>
 
     <!-- ===== Кнопки ===== -->
     <HBox spacing="10" alignment="CENTER_RIGHT">
-        <Button fx:id="solveButton"
-                text="🚀 Решить"
-                style="-fx-font-size: 14px; -fx-background-color: #27ae60; -fx-text-fill: white; -fx-padding: 8px 20px;"/>
-        <Button fx:id="clearButton"
-                text="🧹 Очистить"
-                style="-fx-font-size: 14px; -fx-background-color: #f39c12; -fx-text-fill: white; -fx-padding: 8px 20px;"/>
-        <Button fx:id="historyButton"
-                text="📋 История"
-                style="-fx-font-size: 14px; -fx-background-color: #3498db; -fx-text-fill: white; -fx-padding: 8px 20px;"/>
-        <Button fx:id="exitButton"
-                text="🚪 Выход"
-                style="-fx-font-size: 14px; -fx-background-color: #e74c3c; -fx-text-fill: white; -fx-padding: 8px 20px;"/>
+        <Button fx:id="solveButton" text="🚀 Решить"/>
+        <Button fx:id="clearButton" text="🧹 Очистить"/>
+        <Button fx:id="historyButton" text="📋 История"/>
+        <Button fx:id="exitButton" text="🚪 Выход"/>
     </HBox>
 
     <Separator/>
@@ -59,10 +47,9 @@
         <!-- Левая панель: текстовый вывод -->
         <VBox spacing="5" style="-fx-padding: 5px;">
             <Label text="📝 Решение"
-                   style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+                   styleClass="label-section"/>
             <TextArea fx:id="resultArea"
                       VBox.vgrow="ALWAYS"
-                      style="-fx-font-size: 13px; -fx-font-family: 'Consolas', 'Courier New', monospace;"
                       editable="false"
                       wrapText="true"/>
         </VBox>
@@ -70,10 +57,8 @@
         <!-- Правая панель: список шагов -->
         <VBox spacing="5" style="-fx-padding: 5px;">
             <Label text="📋 Шаги решения"
-                   style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
-            <ListView fx:id="stepsView"
-                      VBox.vgrow="ALWAYS"
-                      style="-fx-font-size: 13px; -fx-font-family: 'Consolas', 'Courier New', monospace;"/>
+                   styleClass="label-section"/>
+            <ListView fx:id="stepsView" VBox.vgrow="ALWAYS"/>
         </VBox>
 
     </SplitPane>
@@ -81,7 +66,7 @@
     <!-- ===== Подсказка ===== -->
     <HBox spacing="5" style="-fx-padding: 5px 0 0 0;">
         <Label text="💡 Примеры: 3x + 5 = 20  |  2x - 3 = 7  |  x + 2 = 5"
-               style="-fx-font-size: 12px; -fx-text-fill: #95a5a6;"/>
+               styleClass="label-hint"/>
     </HBox>
 
 </VBox>

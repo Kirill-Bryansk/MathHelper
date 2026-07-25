@@ -1,7 +1,6 @@
 package ru.math.MathHelper;
 
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 import ru.math.MathHelper.core.parser.LinearEquationParser;
@@ -14,15 +13,14 @@ import ru.math.MathHelper.ui.config.StageManager;
 
 /**
  * Главный класс приложения.
- *
  * JavaFX + ручное создание зависимостей (без Spring Boot).
- *
  * Жизненный цикл:
  * 1. init() → создание сервисов
  * 2. start() → отображение главного окна
  * 3. stop() → корректное завершение приложения
  */
 @Slf4j
+@SuppressWarnings("FieldCanBeLocal")
 public class MathHelperApplication extends Application {
 
     private StageManager stageManager;
@@ -45,8 +43,8 @@ public class MathHelperApplication extends Application {
         equationService = new EquationService(parser, solver);
         historyService = new HistoryService(storageManager);
 
-        // Создаём менеджер окон
-        stageManager = new StageManager();
+        // Создаём менеджер окон и передаём ему сервисы
+        stageManager = new StageManager(equationService, historyService);
 
         log.info("✅ Приложения инициализировано");
     }
@@ -68,8 +66,6 @@ public class MathHelperApplication extends Application {
     @Override
     public void stop() {
         log.info("🛑 Остановка приложения...");
-        Platform.exit();
-        System.exit(0);
     }
 
     /**
