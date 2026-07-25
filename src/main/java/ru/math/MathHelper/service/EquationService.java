@@ -1,8 +1,6 @@
 package ru.math.MathHelper.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 import ru.math.MathHelper.core.model.LinearEquation;
 import ru.math.MathHelper.core.parser.LinearEquationParser;
 import ru.math.MathHelper.core.parser.ParsingException;
@@ -17,25 +15,17 @@ import ru.math.MathHelper.core.solver.LinearEquationSolver;
  * 2. Парсит её в объект LinearEquation
  * 3. Решает уравнение
  * 4. Возвращает результат с пошаговым решением
- *
- * Использует Spring Dependency Injection для внедрения зависимостей.
  */
-@Slf4j                          // Логирование
-@Service                        // Регистрируем как Spring-бин
-@RequiredArgsConstructor        // Генерирует конструктор для final полей
+@Slf4j
 public class EquationService {
 
-    /**
-     * Парсер для преобразования строки в уравнение.
-     * Внедряется через конструктор (благодаря @RequiredArgsConstructor)
-     */
     private final LinearEquationParser parser;
-
-    /**
-     * Решатель для вычисления корня уравнения.
-     * Внедряется через конструктор
-     */
     private final LinearEquationSolver solver;
+
+    public EquationService(LinearEquationParser parser, LinearEquationSolver solver) {
+        this.parser = parser;
+        this.solver = solver;
+    }
 
     /**
      * Основной метод: принимает строку с уравнением, решает и возвращает результат.

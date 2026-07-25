@@ -1,7 +1,6 @@
 package ru.math.MathHelper.core.solver;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 import ru.math.MathHelper.core.model.LinearEquation;
 
 import java.util.ArrayList;
@@ -19,8 +18,7 @@ import java.util.List;
  * - Если a-c = 0 и d-b = 0 → бесконечное множество решений
  * - Если a-c = 0 и d-b ≠ 0 → нет решений
  */
-@Slf4j                        // Логирование через SLF4J
-@Component                    // Регистрируем как Spring-бин (для DI)
+@Slf4j
 public class LinearEquationSolver implements EquationSolver<LinearEquation> {
 
     /**
@@ -31,9 +29,6 @@ public class LinearEquationSolver implements EquationSolver<LinearEquation> {
      */
     @Override
     public EquationResult solve(LinearEquation equation) {
-        // Логируем начало решения (для отладки)
-        log.debug("Решение уравнения: {}", equation);
-
         try {
             // Список шагов — будем добавлять по мере решения
             List<SolutionStep> steps = new ArrayList<>();

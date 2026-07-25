@@ -5,20 +5,15 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationContext;
-import org.springframework.stereotype.Component;
+import ru.math.MathHelper.ui.controller.MainController;
 
 import java.io.IOException;
 import java.net.URL;
 
 @Slf4j
-@Component
-@RequiredArgsConstructor
 public class StageManager {
 
-    private final ApplicationContext applicationContext;
     private Stage primaryStage;
 
     public void setPrimaryStage(Stage stage) {
@@ -39,26 +34,19 @@ public class StageManager {
 
     public void showMainStage() {
         try {
-            // 🔧 ИСПРАВЛЕНО: используем абсолютный путь от корня resources
             URL fxmlUrl = getClass().getResource("/ui/view/main-view.fxml");
             if (fxmlUrl == null) {
                 log.error("FXML не найден по пути: /ui/view/main-view.fxml");
-
-                // 🔧 Пробуем альтернативные пути
-                fxmlUrl = getClass().getResource("ui/view/main-view.fxml");
-                if (fxmlUrl == null) {
-                    fxmlUrl = getClass().getResource("/main-view.fxml");
-                }
-                if (fxmlUrl == null) {
-                    throw new IOException("FXML файл не найден ни по одному из путей!");
-                }
+                throw new IOException("FXML файл не найден!");
             }
 
             log.info("FXML найден: {}", fxmlUrl);
 
             FXMLLoader loader = new FXMLLoader(fxmlUrl);
-            loader.setControllerFactory(applicationContext::getBean);
             Parent root = loader.load();
+
+            MainController controller = loader.getController();
+            controller.initWithServices();
 
             Scene scene = new Scene(root, 900, 650);
 

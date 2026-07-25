@@ -1,7 +1,6 @@
 package ru.math.MathHelper.core.parser;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 import ru.math.MathHelper.core.model.LinearEquation;
 import ru.math.MathHelper.core.parser.token.Token;
 import ru.math.MathHelper.core.parser.token.TokenType;
@@ -10,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
-@Component
 public class LinearEquationParser implements EquationParser<LinearEquation> {
 
     @Override
@@ -58,7 +56,7 @@ public class LinearEquationParser implements EquationParser<LinearEquation> {
             if (Character.isDigit(ch) || ch == '.') {
                 currentNumber.append(ch);
                 i++;
-            } else if (ch == 'x' || ch == 'X') {
+            } else if (ch == 'x' || ch == 'X' || ch == '\u0445' || ch == '\u0425') {
                 if (currentNumber.length() > 0) {
                     double num = Double.parseDouble(currentNumber.toString());
                     if (isNegative) num = -num;

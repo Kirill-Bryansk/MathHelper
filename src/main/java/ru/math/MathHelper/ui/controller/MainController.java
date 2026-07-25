@@ -3,9 +3,7 @@ package ru.math.MathHelper.ui.controller;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Controller;
 import ru.math.MathHelper.core.solver.EquationResult;
 import ru.math.MathHelper.core.solver.SolutionStep;
 import ru.math.MathHelper.service.EquationService;
@@ -13,38 +11,50 @@ import ru.math.MathHelper.storage.HistoryService;
 import ru.math.MathHelper.storage.dto.HistoryRecord;
 
 @Slf4j
-@Controller
-@RequiredArgsConstructor
 public class MainController {
 
-    // ===== Spring-бины =====
-    private final EquationService equationService;
-    private final HistoryService historyService;
-
-    // ===== Элементы интерфейса =====
-    @FXML
-    private TextField equationInput;      // Поле ввода
+    private EquationService equationService;
+    private HistoryService historyService;
 
     @FXML
-    private TextArea resultArea;          // Область вывода
+    private TextField equationInput;
 
     @FXML
-    private ListView<String> stepsView;   // Список шагов
+    private TextArea resultArea;
 
     @FXML
-    private Button solveButton;           // Кнопка "Решить"
+    private ListView<String> stepsView;
 
     @FXML
-    private Button clearButton;           // Кнопка "Очистить"
+    private Button solveButton;
 
     @FXML
-    private Button historyButton;         // Кнопка "История"
+    private Button clearButton;
 
     @FXML
-    private Button exitButton;            // Кнопка "Выход"
+    private Button historyButton;
 
     @FXML
-    private Label statusLabel;            // Статусная строка
+    private Button exitButton;
+
+    @FXML
+    private Label statusLabel;
+
+    /**
+     * Вызывается StageManager для передачи сервисов.
+     * FXML loader создаёт контроллер автоматически,
+     * поэтому зависимости передаются вручную.
+     */
+    public void initWithServices() {
+        log.info("🔄 Инициализация MainController с сервисами");
+        this.equationService = new EquationService(
+            new ru.math.MathHelper.core.parser.LinearEquationParser(),
+            new ru.math.MathHelper.core.solver.LinearEquationSolver()
+        );
+        this.historyService = new HistoryService(
+            new ru.math.MathHelper.storage.FileStorageManager("history.json")
+        );
+    }
 
     /**
      * Инициализация контроллера.
@@ -147,8 +157,8 @@ public class MainController {
                     .append("\n");
             if (step.getExplanation() != null && !step.getExplanation().isEmpty()) {
                 textResult.append("   → ")
-                        .append(step.getExplanation())
-                        .append("\n");
+                    .append(step.getExplanation())
+                    .append("\n");
             }
             textResult.append("\n");
         }
@@ -223,7 +233,6 @@ public class MainController {
         dialog.getDialogPane().setContent(historyListView);
         dialog.getDialogPane().getButtonTypes().addAll(clearButtonType, closeButtonType);
 
-        // 🔧 ИСПРАВЛЕНО: приводим Node к Button
         Button clearButton = (Button) dialog.getDialogPane().lookupButton(clearButtonType);
         clearButton.setOnAction(e -> {
             historyService.clearHistory();

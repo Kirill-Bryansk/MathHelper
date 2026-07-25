@@ -3,8 +3,6 @@ package ru.math.MathHelper.storage;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 import ru.math.MathHelper.storage.dto.HistoryRecord;
 
 import java.io.File;
@@ -19,24 +17,13 @@ import java.util.List;
  * Использует Jackson для сериализации/десериализации.
  */
 @Slf4j
-@Component
 public class FileStorageManager implements StorageManager {
 
-    /**
-     * Имя файла для хранения истории.
-     * Можно переопределить через application.properties:
-     * app.history-file=history.json
-     */
-    @Value("${app.history-file:history.json}")
-    private String historyFileName;
-
-    /** Jackson ObjectMapper для работы с JSON */
+    private final String historyFileName;
     private final ObjectMapper objectMapper;
 
-    /**
-     * Конструктор, создаёт ObjectMapper с поддержкой Java 8 Time API.
-     */
-    public FileStorageManager() {
+    public FileStorageManager(String historyFileName) {
+        this.historyFileName = historyFileName;
         this.objectMapper = new ObjectMapper();
         this.objectMapper.registerModule(new JavaTimeModule());
     }

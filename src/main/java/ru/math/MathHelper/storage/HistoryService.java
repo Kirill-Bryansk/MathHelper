@@ -1,8 +1,6 @@
 package ru.math.MathHelper.storage;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 import ru.math.MathHelper.core.solver.EquationResult;
 import ru.math.MathHelper.core.solver.SolutionStep;
 import ru.math.MathHelper.storage.dto.HistoryRecord;
@@ -18,11 +16,13 @@ import java.util.List;
  * - форматирование ответа
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
 public class HistoryService {
 
     private final StorageManager storageManager;
+
+    public HistoryService(StorageManager storageManager) {
+        this.storageManager = storageManager;
+    }
 
     /**
      * Сохраняет результат решения в историю.

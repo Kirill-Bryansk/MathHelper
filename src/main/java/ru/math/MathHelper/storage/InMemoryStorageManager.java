@@ -1,8 +1,6 @@
 package ru.math.MathHelper.storage;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
 import ru.math.MathHelper.storage.dto.HistoryRecord;
 
 import java.util.ArrayList;
@@ -13,16 +11,10 @@ import java.util.List;
  *
  * Используется для тестирования или когда не нужно сохранять историю на диск.
  * Данные хранятся только во время работы приложения.
- *
- * Включается через application.properties:
- * app.storage.type=memory
  */
 @Slf4j
-@Component
-@ConditionalOnProperty(name = "app.storage.type", havingValue = "memory", matchIfMissing = false)
 public class InMemoryStorageManager implements StorageManager {
 
-    /** Хранилище записей в памяти */
     private final List<HistoryRecord> records = new ArrayList<>();
 
     @Override

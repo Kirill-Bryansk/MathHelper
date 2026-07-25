@@ -26,5 +26,5 @@
     </root>
 
     <!-- Для наших классов можно включить DEBUG -->
-    <logger name="com.uravnyashka" level="DEBUG"/>
+    <logger name="ru.math.MathHelper" level="DEBUG"/>
 </configuration>
