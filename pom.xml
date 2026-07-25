@@ -73,7 +73,7 @@
       <version>${javafx.version}</version>
     </dependency>
 
-    <!-- Lombok - ТОЛЬКО ОДНА ЗАПИСЬ -->
+    <!-- Lombok -->
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
@@ -108,6 +108,7 @@
 
   <build>
     <plugins>
+      <!-- Компилятор с Lombok -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -124,26 +125,62 @@
             <path>
               <groupId>org.springframework.boot</groupId>
               <artifactId>spring-boot-configuration-processor</artifactId>
-              <version>${project.parent.version}</version>  <!-- Исправлено! -->
+              <version>${project.parent.version}</version>
             </path>
           </annotationProcessorPaths>
         </configuration>
       </plugin>
 
+      <!--
+          ⚠️ Spring Boot Maven Plugin ОТКЛЮЧЁН
+          Чтобы не создавал BOOT-INF структуру
+      -->
+      <!--
       <plugin>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-maven-plugin</artifactId>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-maven-plugin</artifactId>
+          <configuration>
+              <mainClass>ru.math.MathHelper.MathHelperApplication</mainClass>
+              <layout>NONE</layout>
+              <excludes>
+                  <exclude>
+                      <groupId>org.projectlombok</groupId>
+                      <artifactId>lombok</artifactId>
+                  </exclude>
+              </excludes>
+          </configuration>
+      </plugin>
+      -->
+
+      <!-- Maven Assembly Plugin - создаёт JAR с зависимостями -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>3.7.1</version>
         <configuration>
-          <mainClass>ru.math.MathHelper.MathHelperApplication</mainClass>
-          <excludes>
-            <exclude>
-              <groupId>org.projectlombok</groupId>
-              <artifactId>lombok</artifactId>
-            </exclude>
-          </excludes>
+          <archive>
+            <manifest>
+              <mainClass>ru.math.MathHelper.MathHelperApplication</mainClass>
+            </manifest>
+          </archive>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+          <finalName>MathHelper</finalName>
+          <appendAssemblyId>false</appendAssemblyId>
         </configuration>
+        <executions>
+          <execution>
+            <id>make-assembly</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
 
+      <!-- JavaFX для разработки -->
       <plugin>
         <groupId>org.openjfx</groupId>
         <artifactId>javafx-maven-plugin</artifactId>
