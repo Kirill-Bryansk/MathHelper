@@ -11,8 +11,8 @@ import java.util.Set;
 public class VariableManager {
     private static final Logger log = LoggerFactory.getLogger(VariableManager.class);
 
-    // Поддерживаем x, y (латиница) и у (русская)
-    private static final Set<Character> SUPPORTED = Set.of('x', 'y', 'у', 'X', 'Y', 'У');
+    // Поддерживаем x, y (латиница) и х, у (русская)
+    private static final Set<Character> SUPPORTED = Set.of('x', 'y', 'х', 'у', 'X', 'Y', 'Х', 'У');
 
     private String variable = "x";
 
@@ -35,10 +35,13 @@ public class VariableManager {
     }
 
     /**
-     * Нормализует переменную (русская 'у' → 'y')
+     * Нормализует переменную (русская 'х' → 'x', русская 'у' → 'y')
      */
     private String normalize(char c) {
         char lower = Character.toLowerCase(c);
+        if (lower == 'х') { // русская х
+            return "x";
+        }
         if (lower == 'у') { // русская у
             return "y";
         }
@@ -54,8 +57,10 @@ public class VariableManager {
 
         // Заменяем все варианты на нормализованную переменную
         String result = input
-                .replaceAll("[xу]", var)      // русская и английская 'у' → стандартная
-                .replaceAll("[XУ]", var.toUpperCase());
+                .replaceAll("[xх]", var)      // русская и английская 'х' → стандартная
+                .replaceAll("[yу]", var)      // русская и английская 'у' → стандартная
+                .replaceAll("[XХ]", var.toUpperCase())
+                .replaceAll("[YУ]", var.toUpperCase());
 
         log.debug("Результат нормализации: {}", result);
         return result;
