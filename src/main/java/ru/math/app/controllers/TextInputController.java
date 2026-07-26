@@ -6,13 +6,11 @@ import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.math.model.equation.EquationType;
 import ru.math.model.equation.SolutionResult;
 import ru.math.parser.DecimalValidator;
 import ru.math.solver.EquationSolver;
 
-/**
- * Контроллер для текстового ввода уравнения
- */
 public class TextInputController {
     private static final Logger log = LoggerFactory.getLogger(TextInputController.class);
 
@@ -28,11 +26,8 @@ public class TextInputController {
         log.info("Инициализация текстового ввода");
         solver = new EquationSolver();
 
-        // Обработчики
         solveButton.setOnAction(e -> onSolve());
         clearButton.setOnAction(e -> onClear());
-
-        // Enter в поле ввода
         equationInput.setOnAction(e -> onSolve());
     }
 
@@ -51,17 +46,13 @@ public class TextInputController {
         }
 
         try {
-            // Проверяем запятые
             DecimalValidator.validate(input);
 
-            // Решаем
             SolutionResult result = solver.solve(input);
 
-            // Показываем результат
             mainController.showSolution(result);
 
-            // Сохраняем в историю
-            if (result.getType() != ru.math.model.equation.EquationType.UNSUPPORTED) {
+            if (result.getType() != EquationType.UNSUPPORTED) {
                 saveToHistory(input, result);
             }
 
@@ -70,7 +61,7 @@ public class TextInputController {
             showError("Недопустимый символ", e.getMessage());
         } catch (Exception e) {
             log.error("Ошибка решения", e);
-            showError("Ошибка", "Не удалось решить уравнение: " + e.getMessage());
+            showError("Ошибка", "Не удалось решить уравнение:\n" + e.getMessage());
         }
     }
 
@@ -99,11 +90,11 @@ public class TextInputController {
     }
 
     private String formatSolution(SolutionResult result) {
-        if (result.getType() == ru.math.model.equation.EquationType.LINEAR) {
+        if (result.getType() == EquationType.LINEAR) {
             return result.getVariable() + " = " + result.getSolution();
-        } else if (result.getType() == ru.math.model.equation.EquationType.INFINITE) {
+        } else if (result.getType() == EquationType.INFINITE) {
             return result.getVariable() + " — любое число";
-        } else if (result.getType() == ru.math.model.equation.EquationType.NO_SOLUTION) {
+        } else if (result.getType() == EquationType.NO_SOLUTION) {
             return "Решений нет";
         }
         return "Не поддерживается";

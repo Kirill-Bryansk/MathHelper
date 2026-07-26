@@ -10,7 +10,11 @@
 <VBox xmlns="http://javafx.com/javafx/21"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="ru.math.app.controllers.TextInputController"
-      spacing="10" padding="15">
+      spacing="10">
+
+    <padding>
+        <Insets top="15" right="15" bottom="15" left="15"/>
+    </padding>
 
     <Label text="Введите уравнение:" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
 
@@ -25,8 +29,4 @@
     <Label text="2(x + 3) - 5 = 3(x - 1) + 7" style="-fx-font-size: 12px; -fx-fill: #3498db;"/>
     <Label text="(2x + 1)/3 - (x - 2)/2 = 5" style="-fx-font-size: 12px; -fx-fill: #3498db;"/>
     <Label text="(13.4 - y)*4.3 - 20.05 = 78.05 + 6.7y" style="-fx-font-size: 12px; -fx-fill: #3498db;"/>
-
-    <VBox.margin>
-        <Insets/>
-    </VBox.margin>
 </VBox>

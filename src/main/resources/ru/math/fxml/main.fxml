@@ -3,9 +3,9 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
-<?import javafx.scene.layout.VBox?>
-<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
 
 <VBox xmlns="http://javafx.com/javafx/21"
       xmlns:fx="http://javafx.com/fxml/1"
@@ -13,7 +13,7 @@
       spacing="10" prefHeight="750.0" prefWidth="1000.0">
 
     <padding>
-        <Insets bottom="10" left="10" right="10" top="10"/>
+        <Insets top="10" right="10" bottom="10" left="10"/>
     </padding>
 
     <!-- Заголовок -->
@@ -29,8 +29,6 @@
         <Tab fx:id="historyTab" text="📜 История" closable="false"/>
     </TabPane>
 
-    <!-- Панель решения -->
-    <VBox fx:id="solutionPanel" styleClass="solution-panel" minHeight="200" VBox.vgrow="ALWAYS">
-        <Label text="📐 Решение" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
-    </VBox>
+    <!-- Панель решения - будет заполняться из MainController -->
+    <VBox fx:id="solutionPanel" styleClass="solution-panel" minHeight="200" VBox.vgrow="ALWAYS"/>
 </VBox>

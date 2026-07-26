@@ -10,7 +10,11 @@
 <VBox xmlns="http://javafx.com/javafx/21"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="ru.math.app.controllers.HistoryController"
-      spacing="10" padding="15">
+      spacing="10">
+
+    <padding>
+        <Insets top="15" right="15" bottom="15" left="15"/>
+    </padding>
 
     <HBox spacing="10" alignment="CENTER_LEFT">
         <Label text="📜 История решений" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
@@ -19,5 +23,6 @@
 
     <ListView fx:id="historyList" VBox.vgrow="ALWAYS"/>
 
-    <Label text="💡 Сохраняется до 100 последних записей" style="-fx-font-size: 12px; -fx-fill: #7f8c8d;"/>
+    <Label text="💡 Сохраняется до 100 последних записей"
+           style="-fx-font-size: 12px; -fx-fill: #7f8c8d;"/>
 </VBox>

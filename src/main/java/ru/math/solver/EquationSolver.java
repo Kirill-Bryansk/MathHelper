@@ -14,6 +14,7 @@ import ru.math.parser.ast.ASTNode;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Основной решатель уравнений
@@ -71,20 +72,24 @@ public class EquationSolver {
         int degree = standard.degree();
         logger.log("Степень уравнения", String.valueOf(degree));
 
+        SolutionResult result;
+
         if (degree == 0) {
-            return solveConstant(b, variable);
+            result = solveConstant(b, variable);
         } else if (degree == 1) {
-            return solveLinear(a, b, variable);
+            result = solveLinear(a, b, variable);
         } else if (degree == 2) {
-            return solveQuadratic(standard, variable);
+            result = solveQuadratic(standard, variable);
         } else {
             logger.log("Ошибка", "Уравнение степени " + degree + " не поддерживается");
-            return SolutionResult.builder()
+            result = SolutionResult.builder()
                     .type(EquationType.UNSUPPORTED)
                     .variable(variable)
-                    .steps(logger.getSteps())
+                    .steps(convertStepsToStrings(logger.getSteps()))
                     .build();
         }
+
+        return result;
     }
 
     /**
@@ -95,10 +100,18 @@ public class EquationSolver {
 
         if (b.isZero()) {
             logger.log("Особый случай", "0 = 0", "Уравнение верно при любых значениях " + variable);
-            return SolutionResult.infinite(variable);
+            return SolutionResult.builder()
+                    .type(EquationType.INFINITE)
+                    .variable(variable)
+                    .steps(convertStepsToStrings(logger.getSteps()))
+                    .build();
         } else {
             logger.log("Особый случай", b + " = 0", "Противоречие, решений нет");
-            return SolutionResult.noSolution(variable);
+            return SolutionResult.builder()
+                    .type(EquationType.NO_SOLUTION)
+                    .variable(variable)
+                    .steps(convertStepsToStrings(logger.getSteps()))
+                    .build();
         }
     }
 
@@ -112,10 +125,18 @@ public class EquationSolver {
             // a = 0, проверяем b
             if (b.isZero()) {
                 logger.log("Особый случай", "0 = 0", "Уравнение верно при любых значениях " + variable);
-                return SolutionResult.infinite(variable);
+                return SolutionResult.builder()
+                        .type(EquationType.INFINITE)
+                        .variable(variable)
+                        .steps(convertStepsToStrings(logger.getSteps()))
+                        .build();
             } else {
                 logger.log("Особый случай", b + " = 0", "Противоречие, решений нет");
-                return SolutionResult.noSolution(variable);
+                return SolutionResult.builder()
+                        .type(EquationType.NO_SOLUTION)
+                        .variable(variable)
+                        .steps(convertStepsToStrings(logger.getSteps()))
+                        .build();
             }
         }
 
@@ -134,7 +155,7 @@ public class EquationSolver {
                 .type(EquationType.LINEAR)
                 .solution(x)
                 .variable(variable)
-                .steps(logger.getSteps())
+                .steps(convertStepsToStrings(logger.getSteps()))
                 .check(check)
                 .build();
     }
@@ -155,7 +176,7 @@ public class EquationSolver {
         return SolutionResult.builder()
                 .type(EquationType.QUADRATIC)
                 .variable(variable)
-                .steps(logger.getSteps())
+                .steps(convertStepsToStrings(logger.getSteps()))
                 .build();
     }
 
@@ -171,6 +192,37 @@ public class EquationSolver {
         } else {
             return a + "·(" + x + ") + " + b + " = " + check + " ≠ 0 ✗";
         }
+    }
+
+    /**
+     * Преобразует List<SolutionStep> в List<String>
+     */
+    private List<String> convertStepsToStrings(List<SolutionStep> steps) {
+        if (steps == null || steps.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<String> result = new ArrayList<>();
+        for (SolutionStep step : steps) {
+            StringBuilder sb = new StringBuilder();
+            if (step.getTitle() != null && !step.getTitle().isEmpty()) {
+                sb.append(step.getTitle());
+            }
+            if (step.getExpression() != null && !step.getExpression().isEmpty()) {
+                if (sb.length() > 0) {
+                    sb.append(": ");
+                }
+                sb.append(step.getExpression());
+            }
+            if (step.getComment() != null && !step.getComment().isEmpty()) {
+                if (sb.length() > 0) {
+                    sb.append(" ");
+                }
+                sb.append("(").append(step.getComment()).append(")");
+            }
+            result.add(sb.toString());
+        }
+        return result;
     }
 
     public SolutionLogger getLogger() {

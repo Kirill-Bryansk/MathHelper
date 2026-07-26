@@ -12,9 +12,6 @@ import ru.math.history.HistoryManager;
 
 import java.io.IOException;
 
-/**
- * Контроллер главного окна
- */
 public class MainController {
     private static final Logger log = LoggerFactory.getLogger(MainController.class);
 
@@ -35,6 +32,8 @@ public class MainController {
         log.info("Инициализация главного контроллера");
 
         historyManager = new HistoryManager();
+
+        // Создаём SolutionViewer один раз
         solutionViewer = new SolutionViewer();
         solutionPanel.getChildren().add(solutionViewer);
 
@@ -89,19 +88,15 @@ public class MainController {
         }
     }
 
-    /**
-     * Показывает результат решения
-     */
     public void showSolution(ru.math.model.equation.SolutionResult result) {
         log.info("Отображение результата: {}", result);
         solutionViewer.display(result);
-        // Переключаемся на вкладку с решением (на главной панели)
-        tabPane.getSelectionModel().select(0);
+        // Переключаемся на главную вкладку (первая)
+        if (tabPane.getTabs().size() > 0) {
+            tabPane.getSelectionModel().select(0);
+        }
     }
 
-    /**
-     * Очищает панель решения
-     */
     public void clearSolution() {
         solutionViewer.clear();
     }

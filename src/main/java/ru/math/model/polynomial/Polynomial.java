@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
  */
 @Getter
 @EqualsAndHashCode
-@ToString
 public class Polynomial {
     private static final Logger log = LoggerFactory.getLogger(Polynomial.class);
 

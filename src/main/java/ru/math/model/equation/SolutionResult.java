@@ -5,8 +5,12 @@ import lombok.Getter;
 import lombok.Singular;
 import lombok.ToString;
 import ru.math.model.rational.Rational;
+import ru.math.solver.SolutionStep;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Результат решения уравнения
@@ -19,7 +23,6 @@ public class SolutionResult {
     private final Rational solution;
     private final String variable;
 
-    @Singular
     private final List<String> steps;
 
     private final String check;
@@ -37,7 +40,7 @@ public class SolutionResult {
     public static SolutionResult quadratic(Rational x1, Rational x2, String variable) {
         return SolutionResult.builder()
                 .type(EquationType.QUADRATIC)
-                .solution(x1) // сохраняем первый корень
+                .solution(x1)
                 .variable(variable)
                 .build();
     }
