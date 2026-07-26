@@ -1,1 +1,170 @@
+/* styles.css - стили для MathHelper */
 
+.root {
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+    -fx-base: #f8f9fa;
+}
+
+/* Главное окно */
+.tab-pane {
+    -fx-tab-min-height: 40px;
+    -fx-tab-max-height: 40px;
+}
+
+.tab-pane .tab {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+.tab-pane .tab:selected {
+    -fx-background-color: #3498db;
+    -fx-text-fill: white;
+}
+
+.tab-pane .tab:selected .tab-label {
+    -fx-text-fill: white;
+}
+
+/* Кнопки */
+.button {
+    -fx-background-color: #3498db;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 8 20 8 20;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: #2980b9;
+}
+
+.button:disabled {
+    -fx-opacity: 0.6;
+    -fx-cursor: default;
+}
+
+.button-danger {
+    -fx-background-color: #e74c3c;
+}
+
+.button-danger:hover {
+    -fx-background-color: #c0392b;
+}
+
+.button-success {
+    -fx-background-color: #27ae60;
+}
+
+.button-success:hover {
+    -fx-background-color: #229954;
+}
+
+/* Поля ввода */
+.text-field {
+    -fx-font-size: 14px;
+    -fx-padding: 8 12 8 12;
+    -fx-border-color: #ced4da;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+}
+
+.text-field:focused {
+    -fx-border-color: #3498db;
+    -fx-border-width: 2px;
+}
+
+/* Комбобоксы */
+.combo-box {
+    -fx-font-size: 14px;
+    -fx-padding: 4 8 4 8;
+}
+
+/* Заголовки */
+.label-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+}
+
+.label-subtitle {
+    -fx-font-size: 14px;
+    -fx-text-fill: #7f8c8d;
+}
+
+/* Панель решения */
+.solution-panel {
+    -fx-background-color: #f8f9fa;
+    -fx-border-color: #dee2e6;
+    -fx-border-radius: 5;
+    -fx-padding: 15;
+}
+
+.solution-content {
+    -fx-background-color: white;
+    -fx-padding: 15;
+    -fx-border-radius: 5;
+}
+
+/* Компоненты конструктора */
+.term-editor {
+    -fx-background-color: #f8f9fa;
+    -fx-border-color: #dee2e6;
+    -fx-border-radius: 5;
+    -fx-padding: 8;
+    -fx-spacing: 5;
+}
+
+.term-editor:hover {
+    -fx-background-color: #e9ecef;
+}
+
+/* Скролл */
+.scroll-pane {
+    -fx-background: transparent;
+    -fx-border-color: transparent;
+}
+
+.scroll-pane .viewport {
+    -fx-background: transparent;
+}
+
+/* Разделители */
+.separator {
+    -fx-padding: 10 0 10 0;
+}
+
+/* Информационные сообщения */
+.info-text {
+    -fx-fill: #2c3e50;
+    -fx-font-size: 13px;
+}
+
+.step-title {
+    -fx-font-weight: bold;
+    -fx-fill: #2980b9;
+}
+
+.step-expression {
+    -fx-fill: #2c3e50;
+    -fx-font-family: "Consolas", monospace;
+}
+
+.step-comment {
+    -fx-fill: #7f8c8d;
+    -fx-font-style: italic;
+    -fx-font-size: 12px;
+}
+
+.answer {
+    -fx-font-weight: bold;
+    -fx-fill: #e74c3c;
+    -fx-font-size: 16px;
+}
+
+.check {
+    -fx-fill: #27ae60;
+    -fx-font-weight: bold;
+}
