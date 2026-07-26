@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
-<?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
@@ -22,13 +23,18 @@
         <Label text="Решение уравнений с пошаговым объяснением" styleClass="label-subtitle"/>
     </HBox>
 
-    <!-- Вкладки -->
-    <TabPane fx:id="tabPane" VBox.vgrow="ALWAYS">
-        <Tab fx:id="textInputTab" text="📝 Текстовый ввод" closable="false"/>
-        <Tab fx:id="constructorTab" text="🔧 Конструктор" closable="false"/>
-        <Tab fx:id="historyTab" text="📜 История" closable="false"/>
-    </TabPane>
+    <!--  SplitPane для изменяемой высоты -->
+    <SplitPane fx:id="mainSplitPane" orientation="VERTICAL" VBox.vgrow="ALWAYS" dividerPositions="0.6">
 
-    <!-- Панель решения - будет заполняться из MainController -->
-    <VBox fx:id="solutionPanel" styleClass="solution-panel" minHeight="200" VBox.vgrow="ALWAYS"/>
+        <!-- Верхняя часть: вкладки -->
+        <TabPane fx:id="tabPane">
+            <Tab fx:id="textInputTab" text="📝 Текстовый ввод" closable="false"/>
+            <Tab fx:id="constructorTab" text="🔧 Конструктор" closable="false"/>
+            <Tab fx:id="historyTab" text="📜 История" closable="false"/>
+        </TabPane>
+
+        <!-- Нижняя часть: панель решения -->
+        <VBox fx:id="solutionPanel"/>
+
+    </SplitPane>
 </VBox>

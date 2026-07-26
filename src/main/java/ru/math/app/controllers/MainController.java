@@ -2,6 +2,7 @@ package ru.math.app.controllers;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.VBox;
@@ -15,6 +16,8 @@ import java.io.IOException;
 public class MainController {
     private static final Logger log = LoggerFactory.getLogger(MainController.class);
 
+    //  Добавляем SplitPane
+    @FXML private SplitPane mainSplitPane;
     @FXML private TabPane tabPane;
     @FXML private Tab textInputTab;
     @FXML private Tab constructorTab;
@@ -36,11 +39,15 @@ public class MainController {
         // Создаём SolutionViewer один раз
         solutionViewer = new SolutionViewer();
         solutionPanel.getChildren().add(solutionViewer);
+        // Растягиваем SolutionViewer на всю высоту solutionPanel
+        VBox.setVgrow(solutionViewer, javafx.scene.layout.Priority.ALWAYS);
 
         // Загружаем вкладки
         loadTextInputTab();
         loadConstructorTab();
         loadHistoryTab();
+
+        mainSplitPane.setDividerPositions(0.6);
     }
 
     private void loadTextInputTab() {
