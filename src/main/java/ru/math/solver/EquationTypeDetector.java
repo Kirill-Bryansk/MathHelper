@@ -17,8 +17,14 @@ public class EquationTypeDetector {
     public String detect(String originalEquation, Equation equation) {
         log.debug("Определение вида уравнения: {}", originalEquation);
 
-        // 1. Сначала проверяем ПО ИСХОДНОЙ СТРОКЕ (важно для скобок и дробей)
         String clean = originalEquation.replaceAll("\\s+", "");
+
+        // 1. Сначала проверяем ПО ИСХОДНОЙ СТРОКЕ (порядок важен!)
+        // Десятичные дроби — ДО скобок, т.к. (13.4-y)*4.3 содержит и то, и другое
+        if (clean.contains(".")) {
+            log.debug("Обнаружены десятичные дроби → вид: с десятичными дробями");
+            return "с десятичными дробями";
+        }
 
         if (clean.contains("(") || clean.contains(")")) {
             log.debug("Обнаружены скобки → вид: со скобками");
@@ -30,14 +36,22 @@ public class EquationTypeDetector {
             return "с дробями";
         }
 
-        if (clean.contains(".")) {
-            log.debug("Обнаружены десятичные дроби → вид: с десятичными");
-            return "с десятичными";
-        }
-
         // 2. Если нет скобок и дробей — анализируем структуру Polynomial
         Polynomial left = equation.getLeft();
         Polynomial right = equation.getRight();
+
+        // Проверяем: левая часть — константа, правая — 0 (или наоборот)
+        if (left.degree() == 0 && right.isZero()) {
+            return "противоречие";
+        }
+        if (left.isZero() && right.degree() == 0) {
+            return "противоречие";
+        }
+
+        // Проверяем тождество: left == right
+        if (polynomialsEqual(left, right)) {
+            return "тождество";
+        }
 
         if (right.isZero()) {
             if (left.isProportional()) {
@@ -53,5 +67,15 @@ public class EquationTypeDetector {
         }
 
         return "смешанный";
+    }
+
+    private boolean polynomialsEqual(Polynomial p1, Polynomial p2) {
+        if (p1.isZero() && p2.isZero()) return true;
+        if (p1.isZero() || p2.isZero()) return false;
+        if (p1.degree() != p2.degree()) return false;
+        for (int i = 0; i <= p1.degree(); i++) {
+            if (!p1.coefficient(i).equals(p2.coefficient(i))) return false;
+        }
+        return true;
     }
 }

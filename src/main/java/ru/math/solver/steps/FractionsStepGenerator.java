@@ -5,9 +5,9 @@ import org.slf4j.LoggerFactory;
 import ru.math.model.equation.Equation;
 import ru.math.model.polynomial.Polynomial;
 import ru.math.model.rational.Rational;
+import ru.math.parser.Parser;
 import ru.math.parser.ast.ASTNode;
-import ru.math.parser.ast.BinaryOpNode;
-import ru.math.parser.ast.NumberNode;
+import ru.math.parser.converter.ASTToPolynomial;
 import ru.math.parser.printer.ASTStringPrinter;
 import ru.math.solver.SolutionStep;
 
@@ -23,10 +23,8 @@ public class FractionsStepGenerator {
     private static final Logger log = LoggerFactory.getLogger(FractionsStepGenerator.class);
 
     private final ASTStringPrinter printer = new ASTStringPrinter();
+    private final ASTToPolynomial converter = new ASTToPolynomial();
 
-    /**
-     * Генерирует шаги решения для уравнения с дробями
-     */
     public List<SolutionStep> generateSteps(
             String originalEquation,
             Equation equation,
@@ -37,241 +35,213 @@ public class FractionsStepGenerator {
         log.debug("Генерация шагов для дробей: {}", originalEquation);
         List<SolutionStep> steps = new ArrayList<>();
 
-        // Шаг 1: исходное уравнение
-        steps.add(new SolutionStep("", originalEquation, ""));
-
-        // Шаг 2: находим НОК знаменателей
+        // Шаг 1: Умножаем обе части на НОК знаменателей
         int lcm = findLCM(originalEquation);
         if (lcm > 1) {
+            String leftPart = getLeftPart(originalEquation);
+            String rightPart = getRightPart(originalEquation);
             steps.add(new SolutionStep(
                     "Умножаем обе части на " + lcm + " (НОК знаменателей)",
-                    lcm + "·(" + getLeftPart(originalEquation) + ") = " + lcm + "·" + getRightPart(originalEquation),
+                    lcm + "·(" + leftPart + ") = " + lcm + "·" + rightPart,
                     ""
             ));
         }
 
-        // Шаг 3: выполняем умножение (упрощаем дроби)
-        String multiplied = multiplyByLCM(originalEquation, lcm);
-        steps.add(new SolutionStep(
-                "Выполняем умножение",
-                multiplied,
-                ""
-        ));
-
-        // Шаг 4: раскрываем скобки
-        // Для этого нужно распарсить умноженное выражение и раскрыть скобки через AST
-        String expanded = expandBrackets(multiplied);
+        // Шаг 2: Раскрываем скобки после умножения
+        String afterMultiply = multiplyByLCM(originalEquation, lcm);
+        String expanded = expandBrackets(afterMultiply);
         steps.add(new SolutionStep(
                 "Раскрываем скобки",
                 expanded,
                 ""
         ));
 
-        // Шаг 5: приводим подобные
-        String simplified = simplifyExpression(expanded, equation, variable);
+        // Шаг 3: Приводим подобные
+        String simplified = simplifyEquation(expanded, variable);
         steps.add(new SolutionStep(
                 "Приводим подобные",
                 simplified,
                 ""
         ));
 
-        // Шаг 6: переносим члены с x влево, без x — вправо
-        String transformed = transformEquation(simplified, equation, variable);
-        steps.add(new SolutionStep(
-                "Переносим члены с " + variable + " влево, без " + variable + " — вправо",
-                transformed,
-                ""
-        ));
+        // Шаг 4: Делим на коэффициент
+        Rational a = standard.coefficient(1);
+        Rational b = standard.coefficient(0);
 
-        // Шаг 7: находим x
-        steps.add(new SolutionStep(
-                "",
-                variable + " = " + solution,
-                ""
-        ));
+        if (!a.isZero()) {
+            Rational x = b.negate().divide(a);
+            if (!a.isOne() && !a.equals(Rational.MINUS_ONE)) {
+                steps.add(new SolutionStep(
+                        "Делим обе части на " + Rational.format(a),
+                        variable + " = " + Rational.format(x),
+                        ""
+                ));
+            } else if (a.equals(Rational.MINUS_ONE)) {
+                steps.add(new SolutionStep(
+                        "Умножаем обе части на -1",
+                        variable + " = " + Rational.format(x),
+                        ""
+                ));
+            } else {
+                steps.add(new SolutionStep(
+                        variable + " = " + Rational.format(x),
+                        variable + " = " + Rational.format(x),
+                        ""
+                ));
+            }
+        }
 
         return steps;
     }
 
-    /**
-     * Находит НОК знаменателей в уравнении
-     */
     private int findLCM(String equation) {
-        log.debug("Поиск НОК знаменателей в: {}", equation);
-
-        // Находим все числа после '/'
-        Pattern pattern = Pattern.compile("/(\\d+)");
+        Pattern pattern = Pattern.compile("/\\s*(\\d+)\\s*");
         Matcher matcher = pattern.matcher(equation);
-
-        List<Integer> denominators = new ArrayList<>();
+        List<Integer> denoms = new ArrayList<>();
         while (matcher.find()) {
-            int den = Integer.parseInt(matcher.group(1));
-            denominators.add(den);
+            denoms.add(Integer.parseInt(matcher.group(1)));
         }
-
-        if (denominators.isEmpty()) {
-            return 1;
+        if (denoms.isEmpty()) return 1;
+        int lcm = denoms.get(0);
+        for (int i = 1; i < denoms.size(); i++) {
+            lcm = lcm(lcm, denoms.get(i));
         }
-
-        // Вычисляем НОК
-        int lcm = denominators.get(0);
-        for (int i = 1; i < denominators.size(); i++) {
-            lcm = lcm(lcm, denominators.get(i));
-        }
-
-        log.debug("НОК знаменателей: {}", lcm);
         return lcm;
     }
 
-    /**
-     * Находит НОК двух чисел
-     */
     private int lcm(int a, int b) {
         return a / gcd(a, b) * b;
     }
 
-    /**
-     * Находит НОД двух чисел
-     */
     private int gcd(int a, int b) {
         while (b != 0) {
-            int temp = b;
+            int t = b;
             b = a % b;
-            a = temp;
+            a = t;
         }
         return Math.abs(a);
     }
 
-    /**
-     * Возвращает левую часть уравнения (до '=')
-     */
-    private String getLeftPart(String equation) {
-        String[] parts = equation.split("=");
-        return parts[0].trim();
+    private String getLeftPart(String eq) {
+        String[] p = eq.split("=");
+        return p[0].trim();
     }
 
-    /**
-     * Возвращает правую часть уравнения (после '=')
-     */
-    private String getRightPart(String equation) {
-        String[] parts = equation.split("=");
-        return parts.length > 1 ? parts[1].trim() : "0";
+    private String getRightPart(String eq) {
+        String[] p = eq.split("=");
+        return p.length > 1 ? p[1].trim() : "0";
     }
 
-    /**
-     * Умножает обе части уравнения на НОК
-     * Упрощённая версия — заменяет дроби на целые числа
-     */
     private String multiplyByLCM(String equation, int lcm) {
-        log.debug("Умножение на НОК: {} * {}", lcm, equation);
-
-        if (lcm == 1) {
-            return equation;
-        }
-
-        // Разбиваем на левую и правую части
+        if (lcm == 1) return equation;
         String[] parts = equation.split("=");
         String left = parts[0].trim();
         String right = parts.length > 1 ? parts[1].trim() : "0";
 
-        // Умножаем каждую часть
-        String multipliedLeft = multiplyExpression(left, lcm);
-        String multipliedRight = multiplyExpression(right, lcm);
-
-        return multipliedLeft + " = " + multipliedRight;
+        left = removeFractions(left, lcm);
+        right = removeFractions(right, lcm);
+        return left + " = " + right;
     }
 
-    /**
-     * Умножает выражение на число (упрощает дроби)
-     */
-    private String multiplyExpression(String expression, int multiplier) {
-        // Заменяем дроби вида a/b на a*multiplier/b
-        // Упрощённая версия — просто заменяем
-        // Например: (2x+1)/3 → 2*(2x+1)
-        // Это нужно делать через AST, но пока упрощённо
-
-        // Пока просто возвращаем выражение с умножением
-        if (expression.contains("/")) {
-            // Для простоты: показываем как multiplier * expression
-            return multiplier + "*(" + expression + ")";
-        }
-        return multiplier + "*" + expression;
-    }
-
-    /**
-     * Раскрывает скобки в выражении (использует AST)
-     */
-    private String expandBrackets(String expression) {
-        log.debug("Раскрытие скобок: {}", expression);
-
-        try {
-            // Парсим выражение
-            ru.math.parser.Parser parser = new ru.math.parser.Parser(expression);
-            ASTNode ast = parser.parse();
-
-            // Раскрываем скобки через ASTStringPrinter
-            String expanded = printer.printExpanded(ast);
-            log.debug("Результат раскрытия: {}", expanded);
-            return expanded;
-        } catch (Exception e) {
-            log.warn("Не удалось раскрыть скобки через AST: {}", e.getMessage());
-            // Возвращаем как есть
-            return expression;
-        }
-    }
-
-    /**
-     * Упрощает выражение (приводит подобные)
-     */
-    private String simplifyExpression(String expression, Equation equation, String variable) {
-        log.debug("Упрощение выражения: {}", expression);
-
-        try {
-            // Парсим выражение
-            ru.math.parser.Parser parser = new ru.math.parser.Parser(expression);
-            ASTNode ast = parser.parse();
-
-            // Конвертируем в Polynomial
-            ru.math.parser.converter.ASTToPolynomial converter =
-                    new ru.math.parser.converter.ASTToPolynomial();
-            Polynomial polynomial = converter.convert(ast);
-
-            // Возвращаем упрощённое выражение
-            return polynomial.toString();
-        } catch (Exception e) {
-            log.warn("Не удалось упростить выражение: {}", e.getMessage());
-            return expression;
-        }
-    }
-
-    /**
-     * Преобразует уравнение к виду x = ...
-     */
-    private String transformEquation(String expression, Equation equation, String variable) {
-        log.debug("Преобразование уравнения: {}", expression);
-
-        try {
-            // Парсим выражение
-            ru.math.parser.Parser parser = new ru.math.parser.Parser(expression);
-            ASTNode ast = parser.parse();
-
-            // Конвертируем в Polynomial
-            ru.math.parser.converter.ASTToPolynomial converter =
-                    new ru.math.parser.converter.ASTToPolynomial();
-            Polynomial polynomial = converter.convert(ast);
-
-            // Получаем коэффициенты
-            Rational a = polynomial.coefficient(1);
-            Rational b = polynomial.coefficient(0);
-
-            // Формируем строку: ax = -b
-            if (!a.isZero()) {
-                return a + variable + " = " + b.negate();
+    private String removeFractions(String expr, int lcm) {
+        Pattern pattern = Pattern.compile("\\(?([^()]+?)\\)\\s*/\\s*(\\d+)\\s*\\)?");
+        Matcher m = pattern.matcher(expr);
+        StringBuffer sb = new StringBuffer();
+        while (m.find()) {
+            String num = m.group(1).trim();
+            int den = Integer.parseInt(m.group(2));
+            int factor = lcm / den;
+            String replacement;
+            if (factor == 1) {
+                replacement = "(" + num + ")";
+            } else {
+                replacement = factor + "·(" + num + ")";
             }
-            return expression;
+            m.appendReplacement(sb, replacement);
+        }
+        m.appendTail(sb);
+        return sb.toString();
+    }
+
+    private String expandBrackets(String expression) {
+        try {
+            Parser parser = new Parser(expression);
+            ASTNode ast = parser.parse();
+            return printer.printExpanded(ast);
         } catch (Exception e) {
-            log.warn("Не удалось преобразовать уравнение: {}", e.getMessage());
+            log.warn("Не удалось раскрыть скобки: {}", e.getMessage());
             return expression;
         }
+    }
+
+    private String simplifyEquation(String expression, String variable) {
+        try {
+            String[] parts = expression.split("=");
+            String left = parts[0].trim();
+            String right = parts.length > 1 ? parts[1].trim() : "0";
+
+            Parser lp = new Parser(left);
+            ASTNode la = lp.parse();
+            Polynomial lPoly = converter.convert(la);
+
+            Parser rp = new Parser(right);
+            ASTNode ra = rp.parse();
+            Polynomial rPoly = converter.convert(ra);
+
+            Polynomial result = lPoly.subtract(rPoly);
+            Rational a = result.coefficient(1);
+            Rational b = result.coefficient(0);
+
+            if (a.isZero()) {
+                return Rational.format(b) + " = 0";
+            }
+
+            return formatTerm(a, variable) + formatConst(b) + " = 0";
+        } catch (Exception e) {
+            log.warn("Не удалось упростить: {}", e.getMessage());
+            return expression;
+        }
+    }
+
+    private String transformToStandard(String expression, String variable) {
+        try {
+            String[] parts = expression.split("=");
+            String left = parts[0].trim();
+            String right = parts.length > 1 ? parts[1].trim() : "0";
+
+            Parser lp = new Parser(left);
+            ASTNode la = lp.parse();
+            Polynomial lPoly = converter.convert(la);
+
+            Parser rp = new Parser(right);
+            ASTNode ra = rp.parse();
+            Polynomial rPoly = converter.convert(ra);
+
+            Polynomial result = lPoly.subtract(rPoly);
+            Rational a = result.coefficient(1);
+            Rational b = result.coefficient(0);
+
+            if (a.isZero()) {
+                return Rational.format(b) + " = 0";
+            }
+
+            return formatTerm(a, variable) + formatConst(b) + " = 0";
+        } catch (Exception e) {
+            log.warn("Не удалось преобразовать: {}", e.getMessage());
+            return expression;
+        }
+    }
+
+    private String formatTerm(Rational coeff, String variable) {
+        if (coeff.isZero()) return "";
+        if (coeff.isOne()) return variable;
+        if (coeff.equals(Rational.MINUS_ONE)) return "-" + variable;
+        return Rational.format(coeff) + "·" + variable;
+    }
+
+    private String formatConst(Rational r) {
+        if (r.isZero()) return "";
+        if (r.signum() > 0) return " + " + Rational.format(r);
+        return " - " + Rational.format(r.abs());
     }
 }

@@ -3,6 +3,8 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
@@ -17,13 +19,35 @@
 
     <Label text="🔧 Конструктор уравнений" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
 
-    <Label text="⚠️ В разработке" style="-fx-font-size: 14px; -fx-fill: #e74c3c;"/>
+    <!-- Предпросмотр уравнения -->
+    <Label fx:id="equationPreview" text="📐 0 = 0"
+           style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-fill: #2c3e50; -fx-padding: 5 0;"/>
 
-    <Label text="Скоро появится возможность собирать уравнения из слагаемых"
-           style="-fx-font-size: 13px; -fx-fill: #7f8c8d;"/>
-
-    <HBox spacing="10">
-        <Button text="▶ Решить" disable="true"/>
-        <Button text="🗑 Очистить" disable="true"/>
+    <!-- Переменная -->
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <Label text="Переменная:" style="-fx-font-size: 12px;"/>
+        <TextField fx:id="variableField" text="x" prefWidth="40"
+                   style="-fx-text-alignment: center;"/>
     </HBox>
+
+    <!-- Левая часть -->
+    <VBox spacing="5">
+        <Label text="Левая часть:" style="-fx-font-size: 12px; -fx-font-weight: bold;"/>
+        <VBox fx:id="leftTermsBox" spacing="3"/>
+    </VBox>
+
+    <!-- Правая часть -->
+    <VBox spacing="5">
+        <Label text="Правая часть:" style="-fx-font-size: 12px; -fx-font-weight: bold;"/>
+        <VBox fx:id="rightTermsBox" spacing="3"/>
+    </VBox>
+
+    <!-- Кнопки -->
+    <HBox spacing="10">
+        <Button fx:id="solveButton" text="▶ Решить" styleClass="button-success" HBox.hgrow="ALWAYS"/>
+        <Button fx:id="clearButton" text="🗑 Очистить" styleClass="button-danger" HBox.hgrow="ALWAYS"/>
+    </HBox>
+
+    <Label text="💡 Коэффициент · Переменная · Степень"
+           style="-fx-font-size: 11px; -fx-fill: #7f8c8d;"/>
 </VBox>

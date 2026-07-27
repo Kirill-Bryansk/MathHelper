@@ -115,4 +115,12 @@ public class MainController {
     public SolutionViewer getSolutionViewer() {
         return solutionViewer;
     }
+
+    public HistoryController getHistoryController() {
+        return historyController;
+    }
+
+    public TextInputController getTextInputController() {
+        return textInputController;
+    }
 }

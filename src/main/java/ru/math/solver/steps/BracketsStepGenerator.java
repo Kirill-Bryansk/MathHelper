@@ -5,11 +5,10 @@ import org.slf4j.LoggerFactory;
 import ru.math.model.equation.Equation;
 import ru.math.model.polynomial.Polynomial;
 import ru.math.model.rational.Rational;
-import ru.math.parser.DecimalValidator;
 import ru.math.parser.Parser;
+import ru.math.parser.ast.ASTNode;
 import ru.math.parser.converter.ASTToPolynomial;
 import ru.math.parser.printer.ASTStringPrinter;
-import ru.math.parser.ast.ASTNode;
 import ru.math.solver.SolutionStep;
 
 import java.util.ArrayList;
@@ -24,9 +23,6 @@ public class BracketsStepGenerator {
     private final ASTStringPrinter printer = new ASTStringPrinter();
     private final ASTToPolynomial converter = new ASTToPolynomial();
 
-    /**
-     * Генерирует шаги решения для уравнения со скобками
-     */
     public List<SolutionStep> generateSteps(
             String originalEquation,
             Equation equation,
@@ -34,29 +30,29 @@ public class BracketsStepGenerator {
             Rational solution,
             String variable
     ) {
-        log.debug("Генерация шагов для уравнения со скобками: {}", originalEquation);
+        log.debug("Генерация шагов для скобок: {}", originalEquation);
         List<SolutionStep> steps = new ArrayList<>();
 
-        // Шаг 1: исходное уравнение
-        steps.add(new SolutionStep("", originalEquation, ""));
+        Rational a = standard.coefficient(1);
+        Rational b = standard.coefficient(0);
 
-        // Шаг 2: раскрываем скобки
-        String expanded = expandBrackets(originalEquation);
+        // Шаг 1: Раскрываем скобки
+        String expanded = expandEquation(originalEquation);
         steps.add(new SolutionStep(
                 "Раскрываем скобки",
                 expanded,
                 ""
         ));
 
-        // Шаг 3: приводим подобные
-        String simplified = simplifyExpression(expanded, variable);
+        // Шаг 2: Приводим подобные
+        String simplified = simplifyEquation(expanded, variable);
         steps.add(new SolutionStep(
                 "Приводим подобные",
                 simplified,
                 ""
         ));
 
-        // Шаг 4: переносим члены с x влево, без x — вправо
+        // Шаг 3: Переносим
         String transformed = transformToStandard(simplified, variable);
         steps.add(new SolutionStep(
                 "Переносим члены с " + variable + " влево, без " + variable + " — вправо",
@@ -64,136 +60,122 @@ public class BracketsStepGenerator {
                 "При переносе знак меняется"
         ));
 
-        // Получаем коэффициенты из стандартного вида
-        Rational a = standard.coefficient(1);
-        Rational b = standard.coefficient(0);
-
-        // Шаг 5: если коэффициент при x не равен 1, делим
-        if (!a.isOne() && !a.equals(Rational.MINUS_ONE) && !a.isZero()) {
-            steps.add(new SolutionStep(
-                    "Делим обе части на " + a,
-                    variable + " = " + b.negate().divide(a),
-                    ""
-            ));
+        // Шаг 4: Делим на коэффициент
+        if (!a.isZero()) {
+            Rational x = b.negate().divide(a);
+            if (!a.isOne() && !a.equals(Rational.MINUS_ONE)) {
+                steps.add(new SolutionStep(
+                        "Делим обе части на " + Rational.format(a),
+                        variable + " = " + Rational.format(x),
+                        ""
+                ));
+            } else if (a.equals(Rational.MINUS_ONE)) {
+                steps.add(new SolutionStep(
+                        "Умножаем обе части на -1",
+                        variable + " = " + Rational.format(x),
+                        ""
+                ));
+            } else {
+                steps.add(new SolutionStep(
+                        variable + " = " + Rational.format(x),
+                        variable + " = " + Rational.format(x),
+                        ""
+                ));
+            }
         }
-
-        // Шаг 6: находим x
-        steps.add(new SolutionStep(
-                "",
-                variable + " = " + solution,
-                ""
-        ));
 
         return steps;
     }
 
-    /**
-     * Раскрывает скобки в выражении через AST
-     */
-    private String expandBrackets(String expression) {
-        log.debug("Раскрытие скобок: {}", expression);
-
+    private String expandEquation(String equation) {
         try {
-            // Парсим левую и правую части отдельно
-            String[] parts = expression.split("=");
+            String[] parts = equation.split("=");
             String left = parts[0].trim();
             String right = parts.length > 1 ? parts[1].trim() : "0";
 
-            // Парсим левую часть
-            Parser leftParser = new Parser(left);
-            ASTNode leftAst = leftParser.parse();
+            Parser lp = new Parser(left);
+            ASTNode la = lp.parse();
+            String expandedLeft = printer.printExpanded(la);
 
-            // Раскрываем скобки
-            String expandedLeft = printer.printExpanded(leftAst);
+            Parser rp = new Parser(right);
+            ASTNode ra = rp.parse();
+            String expandedRight = printer.printExpanded(ra);
 
-            // Парсим правую часть
-            String expandedRight = right;
-            if (!right.equals("0")) {
-                Parser rightParser = new Parser(right);
-                ASTNode rightAst = rightParser.parse();
-                expandedRight = printer.printExpanded(rightAst);
-            }
-
-            String result = expandedLeft + " = " + expandedRight;
-            log.debug("Результат раскрытия: {}", result);
-            return result;
+            return expandedLeft + " = " + expandedRight;
         } catch (Exception e) {
-            log.warn("Не удалось раскрыть скобки через AST: {}", e.getMessage());
-            return expression;
+            log.warn("Не удалось раскрыть скобки: {}", e.getMessage());
+            return equation;
         }
     }
 
-    /**
-     * Упрощает выражение (приводит подобные)
-     */
-    private String simplifyExpression(String expression, String variable) {
-        log.debug("Упрощение выражения: {}", expression);
-
+    private String simplifyEquation(String expression, String variable) {
         try {
             String[] parts = expression.split("=");
             String left = parts[0].trim();
             String right = parts.length > 1 ? parts[1].trim() : "0";
 
-            // Конвертируем левую и правую части в Polynomial
-            Parser leftParser = new Parser(left);
-            ASTNode leftAst = leftParser.parse();
-            Polynomial leftPoly = converter.convert(leftAst);
+            Parser lp = new Parser(left);
+            ASTNode la = lp.parse();
+            Polynomial lPoly = converter.convert(la);
 
-            Parser rightParser = new Parser(right);
-            ASTNode rightAst = rightParser.parse();
-            Polynomial rightPoly = converter.convert(rightAst);
+            Parser rp = new Parser(right);
+            ASTNode ra = rp.parse();
+            Polynomial rPoly = converter.convert(ra);
 
-            // Возвращаем упрощённое выражение
-            String simplifiedLeft = leftPoly.toString();
-            String simplifiedRight = rightPoly.toString();
-
-            // Если правая часть 0, не показываем её
-            if (rightPoly.isZero()) {
-                return simplifiedLeft + " = 0";
-            }
-
-            return simplifiedLeft + " = " + simplifiedRight;
-        } catch (Exception e) {
-            log.warn("Не удалось упростить выражение: {}", e.getMessage());
-            return expression;
-        }
-    }
-
-    /**
-     * Преобразует уравнение к виду ax = b
-     */
-    private String transformToStandard(String expression, String variable) {
-        log.debug("Преобразование к стандартному виду: {}", expression);
-
-        try {
-            String[] parts = expression.split("=");
-            String left = parts[0].trim();
-            String right = parts.length > 1 ? parts[1].trim() : "0";
-
-            // Конвертируем в Polynomial
-            Parser leftParser = new Parser(left);
-            ASTNode leftAst = leftParser.parse();
-            Polynomial leftPoly = converter.convert(leftAst);
-
-            Parser rightParser = new Parser(right);
-            ASTNode rightAst = rightParser.parse();
-            Polynomial rightPoly = converter.convert(rightAst);
-
-            // Переносим всё в левую часть
-            Polynomial standard = leftPoly.subtract(rightPoly);
-
-            // Получаем коэффициенты
-            Rational a = standard.coefficient(1);
-            Rational b = standard.coefficient(0);
+            Polynomial result = lPoly.subtract(rPoly);
+            Rational a = result.coefficient(1);
+            Rational b = result.coefficient(0);
 
             if (a.isZero()) {
-                return b + " = 0";
+                return Rational.format(b) + " = 0";
             }
 
-            return a + variable + " = " + b.negate();
+            return formatTerm(a, variable) + formatConst(b) + " = 0";
         } catch (Exception e) {
-            log.warn("Не удалось преобразовать уравнение: {}", e.getMessage());
+            log.warn("Не удалось упростить: {}", e.getMessage());
             return expression;
         }
+    }
+
+    private String transformToStandard(String expression, String variable) {
+        try {
+            String[] parts = expression.split("=");
+            String left = parts[0].trim();
+            String right = parts.length > 1 ? parts[1].trim() : "0";
+
+            Parser lp = new Parser(left);
+            ASTNode la = lp.parse();
+            Polynomial lPoly = converter.convert(la);
+
+            Parser rp = new Parser(right);
+            ASTNode ra = rp.parse();
+            Polynomial rPoly = converter.convert(ra);
+
+            Polynomial result = lPoly.subtract(rPoly);
+            Rational a = result.coefficient(1);
+            Rational b = result.coefficient(0);
+
+            if (a.isZero()) {
+                return Rational.format(b) + " = 0";
+            }
+
+            return formatTerm(a, variable) + formatConst(b) + " = 0";
+        } catch (Exception e) {
+            log.warn("Не удалось преобразовать: {}", e.getMessage());
+            return expression;
+        }
+    }
+
+    private String formatTerm(Rational coeff, String variable) {
+        if (coeff.isZero()) return "";
+        if (coeff.isOne()) return variable;
+        if (coeff.equals(Rational.MINUS_ONE)) return "-" + variable;
+        return Rational.format(coeff) + "·" + variable;
+    }
+
+    private String formatConst(Rational r) {
+        if (r.isZero()) return "";
+        if (r.signum() > 0) return " + " + Rational.format(r);
+        return " - " + Rational.format(r.abs());
     }
 }

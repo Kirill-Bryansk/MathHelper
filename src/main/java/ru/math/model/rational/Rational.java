@@ -125,4 +125,21 @@ public class Rational {
     public boolean isOne() {
         return numerator.equals(BigInteger.ONE) && denominator.equals(BigInteger.ONE);
     }
+
+    /**
+     * Возвращает знак: -1, 0 или 1
+     */
+    public int signum() {
+        return numerator.signum();
+    }
+
+    /**
+     * Форматирует рациональное число для вывода: целое или дробь
+     */
+    public static String format(Rational r) {
+        if (r.denominator.equals(BigInteger.ONE)) {
+            return r.numerator.toString();
+        }
+        return r.numerator + "/" + r.denominator;
+    }
 }

@@ -6,6 +6,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.math.history.HistoryEntry;
 import ru.math.model.equation.EquationType;
 import ru.math.model.equation.SolutionResult;
 import ru.math.parser.DecimalValidator;
@@ -78,10 +79,8 @@ public class TextInputController {
 
     private void saveToHistory(String input, SolutionResult result) {
         try {
-            // Форматируем решение для истории
             String solutionText = formatSolution(result);
 
-            // Преобразуем List<SolutionStep> в List<String> для истории
             List<String> stepStrings = result.getSteps() != null
                     ? result.getSteps().stream()
                     .map(step -> {
@@ -102,7 +101,7 @@ public class TextInputController {
                     .collect(Collectors.toList())
                     : new ArrayList<>();
 
-            var entry = ru.math.history.HistoryEntry.fromResult(
+            var entry = HistoryEntry.fromResult(
                     input,
                     solutionText,
                     result.getVariable(),
@@ -111,6 +110,11 @@ public class TextInputController {
             );
             mainController.getHistoryManager().save(entry);
             log.debug("Запись сохранена в историю");
+
+            // Обновляем список истории
+            if (mainController.getHistoryController() != null) {
+                mainController.getHistoryController().refresh();
+            }
         } catch (Exception e) {
             log.error("Ошибка сохранения истории", e);
         }
@@ -118,7 +122,7 @@ public class TextInputController {
 
     private String formatSolution(SolutionResult result) {
         if (result.getType() == EquationType.LINEAR) {
-            return result.getVariable() + " = " + result.getSolution();
+            return result.getVariable() + " = " + formatRational(result.getSolution());
         } else if (result.getType() == EquationType.INFINITE) {
             return result.getVariable() + " — любое число";
         } else if (result.getType() == EquationType.NO_SOLUTION) {
@@ -127,11 +131,32 @@ public class TextInputController {
         return "Не поддерживается";
     }
 
+    private String formatRational(ru.math.model.rational.Rational r) {
+        if (r.getDenominator().equals(java.math.BigInteger.ONE)) {
+            return r.getNumerator().toString();
+        }
+        return r.getNumerator() + "/" + r.getDenominator();
+    }
+
     private void showError(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Ошибка");
         alert.setHeaderText(title);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    /**
+     * Устанавливает уравнение из конструктора и автоматически решает
+     */
+    public void setEquation(String equation) {
+        equationInput.setText(equation);
+    }
+
+    /**
+     * Автоматически решает текущее уравнение
+     */
+    public void autoSolve() {
+        onSolve();
     }
 }

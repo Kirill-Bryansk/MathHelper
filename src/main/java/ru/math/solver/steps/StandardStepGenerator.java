@@ -11,14 +11,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Генератор шагов для стандартных уравнений вида ax + b = 0
+ * Генератор шагов для стандартного вида: ax + b = 0
  */
 public class StandardStepGenerator {
     private static final Logger log = LoggerFactory.getLogger(StandardStepGenerator.class);
 
-    /**
-     * Генерирует шаги решения для стандартного уравнения
-     */
     public List<SolutionStep> generateSteps(
             String originalEquation,
             Equation equation,
@@ -26,54 +23,51 @@ public class StandardStepGenerator {
             Rational solution,
             String variable
     ) {
-        log.debug("Генерация шагов для стандартного уравнения: {}", originalEquation);
+        log.debug("Генерация шагов для стандартного вида: {}", originalEquation);
         List<SolutionStep> steps = new ArrayList<>();
 
-        // Шаг 1: исходное уравнение
-        steps.add(new SolutionStep("", originalEquation, ""));
-
-        // Шаг 2: приводим к стандартному виду
-        String standardForm = standard.toString() + " = 0";
-        steps.add(new SolutionStep(
-                "Приводим к стандартному виду",
-                standardForm,
-                ""
-        ));
-
-        // Получаем коэффициенты
         Rational a = standard.coefficient(1);
         Rational b = standard.coefficient(0);
 
-        // Шаг 3: переносим свободный член
+        // Шаг 1: Переносим b вправо
         if (!b.isZero()) {
             steps.add(new SolutionStep(
-                    "Переносим " + b + " в правую часть",
-                    a + variable + " = " + b.negate(),
+                    "Переносим " + Rational.format(b) + " в правую часть",
+                    Rational.format(a) + "·" + variable + " = " + Rational.format(b.negate()),
                     "При переносе знак меняется"
             ));
-        }
-
-        // Шаг 4: делим на коэффициент при x
-        if (!a.isOne() && !a.equals(Rational.MINUS_ONE)) {
+        } else {
+            // ax = 0
             steps.add(new SolutionStep(
-                    "Делим обе части на " + a,
-                    variable + " = " + b.negate() + "/" + a,
-                    ""
-            ));
-        } else if (a.equals(Rational.MINUS_ONE)) {
-            steps.add(new SolutionStep(
-                    "Умножаем обе части на -1",
-                    variable + " = " + b.negate().divide(a),
+                    "Уравнение уже в виде",
+                    Rational.format(a) + "·" + variable + " = 0",
                     ""
             ));
         }
 
-        // Шаг 5: находим x
-        steps.add(new SolutionStep(
-                "",
-                variable + " = " + solution,
-                ""
-        ));
+        // Шаг 2: Делим на a
+        if (!a.isZero()) {
+            Rational x = b.negate().divide(a);
+            if (!a.isOne() && !a.equals(Rational.MINUS_ONE)) {
+                steps.add(new SolutionStep(
+                        "Делим обе части на " + Rational.format(a),
+                        variable + " = " + Rational.format(x),
+                        ""
+                ));
+            } else if (a.equals(Rational.MINUS_ONE)) {
+                steps.add(new SolutionStep(
+                        "Умножаем обе части на -1",
+                        variable + " = " + Rational.format(x),
+                        ""
+                ));
+            } else {
+                steps.add(new SolutionStep(
+                        variable + " = " + Rational.format(x),
+                        variable + " = " + Rational.format(x),
+                        ""
+                ));
+            }
+        }
 
         return steps;
     }
