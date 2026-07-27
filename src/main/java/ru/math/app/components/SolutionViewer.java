@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.math.model.equation.EquationType;
 import ru.math.model.equation.SolutionResult;
+import ru.math.solver.SolutionStep;
 
 /**
  * Компонент для отображения пошагового решения
@@ -59,43 +60,80 @@ public class SolutionViewer extends VBox {
             return;
         }
 
-        // Вид уравнения
-        if (result.getType() != null && result.getType() != EquationType.UNSUPPORTED) {
-            addText("📐 Вид: " + getTypeDescription(result.getType()),
-                    "-fx-font-weight: bold; -fx-fill: #2c3e50;");
+        // ===== 1. Исходное уравнение =====
+        if (result.getOriginalEquation() != null && !result.getOriginalEquation().isEmpty()) {
+            addText("📐 Уравнение: " + result.getOriginalEquation(),
+                    "-fx-font-weight: bold; -fx-fill: #2c3e50; -fx-font-size: 14px;");
             addEmptyLine();
         }
 
-        // Шаги решения
+        // ===== 2. Вид уравнения =====
+        if (result.getViewType() != null && !result.getViewType().isEmpty()) {
+            addText("📋 Вид: " + result.getViewType(),
+                    "-fx-font-weight: bold; -fx-fill: #2980b9; -fx-font-size: 13px;");
+            addEmptyLine();
+        }
+
+        // ===== 3. Шаги решения =====
         if (result.getSteps() != null && !result.getSteps().isEmpty()) {
-            for (String step : result.getSteps()) {
-                if (step.startsWith("Шаг") || step.startsWith("Вид") || step.startsWith("Дано")) {
-                    addText("▸ " + step, "-fx-font-weight: bold; -fx-fill: #2980b9;");
-                } else if (step.contains("→") || step.contains("=")) {
-                    addText("   " + step, "-fx-fill: #2c3e50;");
-                } else {
-                    addText("   " + step, "-fx-fill: #7f8c8d; -fx-font-style: italic;");
-                }
-            }
+            addText("📝 Решение:", "-fx-font-weight: bold; -fx-fill: #2c3e50; -fx-font-size: 14px;");
             addEmptyLine();
+
+            int stepNum = 1;
+            for (SolutionStep step : result.getSteps()) {
+                // Номер шага и заголовок
+                String title = step.getTitle();
+                if (title != null && !title.isEmpty()) {
+                    // Если заголовок начинается с "Шаг", используем его как есть
+                    if (title.startsWith("Шаг")) {
+                        addText("  " + title,
+                                "-fx-font-weight: bold; -fx-fill: #2980b9;");
+                    } else {
+                        addText("  " + stepNum + ") " + title,
+                                "-fx-font-weight: bold; -fx-fill: #2980b9;");
+                        stepNum++;
+                    }
+                }
+
+                // Выражение
+                String expression = step.getExpression();
+                if (expression != null && !expression.isEmpty()) {
+                    addText("     " + expression,
+                            "-fx-fill: #2c3e50; -fx-font-family: 'Courier New', monospace;");
+                }
+
+                // Комментарий
+                String comment = step.getComment();
+                if (comment != null && !comment.isEmpty()) {
+                    addText("     " + comment,
+                            "-fx-fill: #7f8c8d; -fx-font-style: italic; -fx-font-size: 12px;");
+                }
+
+                addEmptyLine();
+            }
         }
 
-        // Ответ
+        // ===== 4. Ответ =====
         if (result.getType() != null) {
             addAnswer(result);
         }
 
-        // Проверка
+        // ===== 5. Проверка =====
         if (result.getCheck() != null && !result.getCheck().isEmpty()) {
             addEmptyLine();
-            addText("🔍 Проверка:", "-fx-font-weight: bold; -fx-fill: #27ae60;");
-            addText("   " + result.getCheck(), "-fx-fill: #2c3e50;");
+            addText("✅ Проверка:", "-fx-font-weight: bold; -fx-fill: #27ae60;");
+            addText("  " + result.getCheck(), "-fx-fill: #2c3e50;");
         }
     }
 
+    /**
+     * Добавляет ответ
+     */
     private void addAnswer(SolutionResult result) {
-        Text answer = new Text("✅ Ответ: ");
-        answer.setStyle("-fx-font-weight: bold; -fx-fill: #27ae60; -fx-font-size: 16px;");
+        addEmptyLine();
+
+        Text answerLabel = new Text("🎯 Ответ: ");
+        answerLabel.setStyle("-fx-font-weight: bold; -fx-fill: #27ae60; -fx-font-size: 16px;");
 
         String answerText;
         if (result.getType() == EquationType.LINEAR) {
@@ -104,6 +142,8 @@ public class SolutionViewer extends VBox {
             answerText = result.getVariable() + " — любое число";
         } else if (result.getType() == EquationType.NO_SOLUTION) {
             answerText = "Решений нет";
+        } else if (result.getType() == EquationType.QUADRATIC) {
+            answerText = "Квадратное уравнение (решение в разработке)";
         } else {
             answerText = "Не поддерживается";
         }
@@ -111,19 +151,29 @@ public class SolutionViewer extends VBox {
         Text answerValue = new Text(answerText);
         answerValue.setStyle("-fx-font-weight: bold; -fx-fill: #e74c3c; -fx-font-size: 16px;");
 
-        content.getChildren().addAll(answer, answerValue);
+        content.getChildren().addAll(answerLabel, answerValue);
+        addEmptyLine();
     }
 
+    /**
+     * Добавляет текст с заданным стилем
+     */
     private void addText(String text, String style) {
         Text t = new Text(text + "\n");
         t.setStyle(style);
         content.getChildren().add(t);
     }
 
+    /**
+     * Добавляет пустую строку
+     */
     private void addEmptyLine() {
         content.getChildren().add(new Text("\n"));
     }
 
+    /**
+     * Показывает плейсхолдер
+     */
     private void showPlaceholder() {
         content.getChildren().clear();
         Text placeholder = new Text("Введите уравнение и нажмите «Решить»");
@@ -131,16 +181,9 @@ public class SolutionViewer extends VBox {
         content.getChildren().add(placeholder);
     }
 
-    private String getTypeDescription(EquationType type) {
-        switch (type) {
-            case LINEAR: return "линейное (одно решение)";
-            case NO_SOLUTION: return "противоречие (нет решений)";
-            case INFINITE: return "тождество (бесконечно много решений)";
-            case QUADRATIC: return "квадратное";
-            default: return "неизвестный тип";
-        }
-    }
-
+    /**
+     * Очищает решение
+     */
     public void clear() {
         showPlaceholder();
     }

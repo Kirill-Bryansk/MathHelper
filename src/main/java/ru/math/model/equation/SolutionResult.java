@@ -19,12 +19,12 @@ import java.util.stream.Collectors;
 @Builder
 @ToString
 public class SolutionResult {
+    private final String originalEquation;  // ← НОВОЕ
+    private final String viewType;          // ← НОВОЕ
     private final EquationType type;
     private final Rational solution;
     private final String variable;
-
-    private final List<String> steps;
-
+    private final List<SolutionStep> steps; // ← ИЗМЕНЕНО: теперь List<SolutionStep>
     private final String check;
 
     // Фабричные методы для удобства создания

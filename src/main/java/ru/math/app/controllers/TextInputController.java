@@ -11,6 +11,10 @@ import ru.math.model.equation.SolutionResult;
 import ru.math.parser.DecimalValidator;
 import ru.math.solver.EquationSolver;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class TextInputController {
     private static final Logger log = LoggerFactory.getLogger(TextInputController.class);
 
@@ -74,12 +78,35 @@ public class TextInputController {
 
     private void saveToHistory(String input, SolutionResult result) {
         try {
+            // Форматируем решение для истории
             String solutionText = formatSolution(result);
+
+            // Преобразуем List<SolutionStep> в List<String> для истории
+            List<String> stepStrings = result.getSteps() != null
+                    ? result.getSteps().stream()
+                    .map(step -> {
+                        StringBuilder sb = new StringBuilder();
+                        if (step.getTitle() != null && !step.getTitle().isEmpty()) {
+                            sb.append(step.getTitle());
+                        }
+                        if (step.getExpression() != null && !step.getExpression().isEmpty()) {
+                            if (sb.length() > 0) sb.append(": ");
+                            sb.append(step.getExpression());
+                        }
+                        if (step.getComment() != null && !step.getComment().isEmpty()) {
+                            if (sb.length() > 0) sb.append(" ");
+                            sb.append("(").append(step.getComment()).append(")");
+                        }
+                        return sb.toString();
+                    })
+                    .collect(Collectors.toList())
+                    : new ArrayList<>();
+
             var entry = ru.math.history.HistoryEntry.fromResult(
                     input,
                     solutionText,
                     result.getVariable(),
-                    result.getSteps(),
+                    stepStrings,
                     result.getCheck()
             );
             mainController.getHistoryManager().save(entry);

@@ -12,20 +12,33 @@ public class EquationTypeDetector {
     private static final Logger log = LoggerFactory.getLogger(EquationTypeDetector.class);
 
     /**
-     * Определяет вид уравнения по его структуре
+     * Определяет вид уравнения по исходной строке и структуре
      */
-    public String detect(Equation equation) {
-        log.debug("Определение вида уравнения: {}", equation);
+    public String detect(String originalEquation, Equation equation) {
+        log.debug("Определение вида уравнения: {}", originalEquation);
 
+        // 1. Сначала проверяем ПО ИСХОДНОЙ СТРОКЕ (важно для скобок и дробей)
+        String clean = originalEquation.replaceAll("\\s+", "");
+
+        if (clean.contains("(") || clean.contains(")")) {
+            log.debug("Обнаружены скобки → вид: со скобками");
+            return "со скобками";
+        }
+
+        if (clean.contains("/")) {
+            log.debug("Обнаружены дроби → вид: с дробями");
+            return "с дробями";
+        }
+
+        if (clean.contains(".")) {
+            log.debug("Обнаружены десятичные дроби → вид: с десятичными");
+            return "с десятичными";
+        }
+
+        // 2. Если нет скобок и дробей — анализируем структуру Polynomial
         Polynomial left = equation.getLeft();
         Polynomial right = equation.getRight();
 
-        // Проверяем наличие скобок и дробей
-        boolean hasBrackets = equation.hasBrackets();
-        boolean hasFractions = equation.hasFractions();
-        log.info("DEBUG hasBrackets={}, hasFractions={}", hasBrackets, hasFractions);
-
-        // Стандартный вид: ax + b = 0
         if (right.isZero()) {
             if (left.isProportional()) {
                 return "пропорциональный (ax = b)";
@@ -33,37 +46,12 @@ public class EquationTypeDetector {
             return "стандартный (ax + b = 0)";
         }
 
-        // Общий вид: ax + b = cx + d
         if (left.isLinear() && right.isLinear()) {
-            // Проверяем, есть ли переменная справа
             if (!right.coefficient(1).isZero()) {
                 return "общий вид (ax + b = cx + d)";
             }
         }
 
-        // Проверяем сложные случаи с дробями
-        if (hasFractions) {
-            // Проверяем, есть ли дроби с выражениями в числителе
-            String str = equation.toString();
-            if (str.contains("(") && str.contains(")/")) {
-                return "сложные дроби";
-            }
-            return "с дробями";
-        }
-
-        if (hasBrackets) {
-            return "со скобками";
-        }
-
         return "смешанный";
-    }
-
-    /**
-     * Определяет подвид для более детального вывода
-     */
-    public String detectDetailed(Equation equation) {
-        String type = detect(equation);
-        log.debug("Детальный вид: {}", type);
-        return type;
     }
 }
