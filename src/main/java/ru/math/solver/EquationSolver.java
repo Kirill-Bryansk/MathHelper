@@ -55,6 +55,7 @@ public class EquationSolver {
 
         // 2. Определяем вид
         String type = typeDetector.detect(equation);
+        log.info("DEBUG EquationSolver: input={}, type={}", input, type);
         logger.log("Вид уравнения", type);
         logger.log("Дано", equation.toString());
 

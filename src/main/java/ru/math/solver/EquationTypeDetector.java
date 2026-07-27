@@ -23,6 +23,7 @@ public class EquationTypeDetector {
         // Проверяем наличие скобок и дробей
         boolean hasBrackets = equation.hasBrackets();
         boolean hasFractions = equation.hasFractions();
+        log.info("DEBUG hasBrackets={}, hasFractions={}", hasBrackets, hasFractions);
 
         // Стандартный вид: ax + b = 0
         if (right.isZero()) {

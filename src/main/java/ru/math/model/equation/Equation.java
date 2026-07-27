@@ -38,7 +38,9 @@ public class Equation {
         // Проверяем, есть ли в строковом представлении скобки
         // Это костыль, но для определения вида достаточно
         String str = toString();
-        return str.contains("(") || str.contains(")");
+        boolean result = str.contains("(") || str.contains(")");
+        log.info("DEBUG hasBrackets: toString()={}, containsBrackets={}", str, result);
+        return result;
     }
 
     /**
