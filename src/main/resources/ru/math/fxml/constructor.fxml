@@ -1,53 +1,63 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
 <VBox xmlns="http://javafx.com/javafx/21"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="ru.math.controllers.ConstructorController"
-      spacing="10">
-
-    <padding>
-        <Insets top="15" right="15" bottom="15" left="15"/>
-    </padding>
+      spacing="10" style="-fx-padding: 10;">
 
     <Label text="🔧 Конструктор уравнений" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
 
-    <!-- Предпросмотр уравнения -->
-    <Label fx:id="equationPreview" text="📐 0 = 0"
-           style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-fill: #2c3e50; -fx-padding: 5 0;"/>
+    <!-- Сборка члена -->
+    <VBox style="-fx-border-color: #ccc; -fx-border-radius: 5; -fx-padding: 10;" spacing="10">
+        <Label text="Создать член:" style="-fx-font-weight: bold;"/>
 
-    <!-- Переменная -->
-    <HBox spacing="10" alignment="CENTER_LEFT">
-        <Label text="Переменная:" style="-fx-font-size: 12px;"/>
-        <TextField fx:id="variableField" text="x" prefWidth="40"
-                   style="-fx-text-alignment: center;"/>
-    </HBox>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Label text="Знак:" prefWidth="80"/>
+            <ChoiceBox fx:id="signBox" prefWidth="60"/>
+        </HBox>
 
-    <!-- Левая часть -->
-    <VBox spacing="5">
-        <Label text="Левая часть:" style="-fx-font-size: 12px; -fx-font-weight: bold;"/>
-        <VBox fx:id="leftTermsBox" spacing="3"/>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Label text="Числитель:" prefWidth="80"/>
+            <TextField fx:id="numeratorField" promptText="2x, -3, 3x+1" HBox.hgrow="ALWAYS"/>
+        </HBox>
+
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Label text="Знаменатель:" prefWidth="80"/>
+            <TextField fx:id="denominatorField" promptText="пусто = не дробь" HBox.hgrow="ALWAYS"/>
+        </HBox>
+
+        <HBox spacing="10" alignment="CENTER">
+            <Button fx:id="addLeftBtn" text="➕ В левую" styleClass="button-success"/>
+            <Button fx:id="addRightBtn" text="➕ В правую" styleClass="button-success"/>
+        </HBox>
     </VBox>
 
-    <!-- Правая часть -->
+    <!-- Списки -->
     <VBox spacing="5">
-        <Label text="Правая часть:" style="-fx-font-size: 12px; -fx-font-weight: bold;"/>
-        <VBox fx:id="rightTermsBox" spacing="3"/>
+        <Label text="Левая часть:" style="-fx-font-weight: bold;"/>
+        <ListView fx:id="leftTermsList" prefHeight="80"/>
+
+        <Label text="Правая часть:" style="-fx-font-weight: bold;"/>
+        <ListView fx:id="rightTermsList" prefHeight="80"/>
     </VBox>
 
-    <!-- Кнопки -->
-    <HBox spacing="10">
-        <Button fx:id="solveButton" text="▶ Решить" styleClass="button-success" HBox.hgrow="ALWAYS"/>
-        <Button fx:id="clearButton" text="🗑 Очистить" styleClass="button-danger" HBox.hgrow="ALWAYS"/>
-    </HBox>
+    <!-- Итоговое уравнение (визуализация) -->
+    <VBox style="-fx-background-color: #f0f0f0; -fx-padding: 10; -fx-background-radius: 5;" spacing="5">
+        <Label text="📐 Уравнение:" style="-fx-font-weight: bold;"/>
+        <FlowPane fx:id="equationFlow" hgap="5" vgap="5"/>
+        <Separator/>
+        <Label text="Линейный вид:" style="-fx-font-weight: bold; -fx-font-size: 11px;"/>
+        <Label fx:id="equationLabel" text="..." style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+    </VBox>
 
-    <Label text="💡 Коэффициент · Переменная · Степень"
-           style="-fx-font-size: 11px; -fx-fill: #7f8c8d;"/>
 </VBox>
