@@ -10,7 +10,8 @@ public enum ErrorType {
     DOUBLE_EQUALS("В уравнении больше одного знака '='"),
     UNEXPECTED_TOKEN("Неожиданный символ '%s' в данной позиции"),
     EMPTY_EXPRESSION("Уравнение не может быть пустым"),
-    EXTRA_SYMBOL("Обнаружены лишние символы после уравнения");
+    EXTRA_SYMBOL("Обнаружены лишние символы после уравнения"),
+    TOO_LONG("Уравнение слишком длинное (максимум 150 символов)");
 
     private final String template;
 

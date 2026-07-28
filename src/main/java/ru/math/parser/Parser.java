@@ -35,7 +35,18 @@ public class Parser {
                 throw new ParseException(ErrorType.DOUBLE_EQUALS, peek().position());
             }
 
+            // Проверяем, что после правой части ничего лишнего нет
+            if (!peek().is(TokenType.EOF)) {
+                throw new ParseException(ErrorType.EXTRA_SYMBOL, peek().position(), peek().value());
+            }
+
             return new Expr.Equation(left, right);
+        }
+
+        // Нет '=' — проверяем, что строка закончилась
+        // Если остались токены — это лишние символы
+        if (!peek().is(TokenType.EOF)) {
+            throw new ParseException(ErrorType.EXTRA_SYMBOL, peek().position(), peek().value());
         }
 
         return left;
@@ -127,10 +138,10 @@ public class Parser {
     }
 
     // Проверка неявного умножения
-    // Срабатывает если после числа/переменной/скобки идёт: число, переменная, (
+    // Только: число/скобка перед переменной, или скобка перед скобкой/числом
+    // НО: число перед числом — это ошибка, а не неявное умножение
     private boolean isImplicitMul(Token t) {
-        return t.is(TokenType.NUMBER)
-               || t.is(TokenType.VARIABLE)
+        return t.is(TokenType.VARIABLE)
                || t.is(TokenType.LPAREN);
     }
 

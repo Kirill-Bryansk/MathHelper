@@ -12,6 +12,8 @@ import ru.math.parser.ErrorType;
 import ru.math.parser.Expr;
 import ru.math.parser.ParseException;
 import ru.math.parser.Parser;
+import ru.math.solver.Solution;
+import ru.math.solver.SolverFactory;
 import ru.math.utils.TextInserter;
 
 @Slf4j
@@ -89,26 +91,66 @@ public class TextInputController implements HasMainController {
 
         if (num.isEmpty()) return;
 
-        String fractionText;
-        if (den.isEmpty()) {
-            fractionText = num;
-        } else {
-            fractionText = "(" + num + ")/(" + den + ")";
+        // Оборачиваем числитель, если нужно
+        String numText = needsParens(num) ? "(" + num + ")" : num;
+
+        // Оборачиваем знаменатель, если нужно
+        String denText = "";
+        if (!den.isEmpty()) {
+            denText = needsParensDen(den) ? "/(" + den + ")" : "/" + den;
         }
 
+        String fractionText = numText + denText;
         textInserter.insert(fractionText);
 
         numeratorField.clear();
         denominatorField.clear();
     }
 
+    // Нужны ли скобки вокруг числителя?
+    private boolean needsParens(String s) {
+        // Уже в скобках — не надо
+        if (s.startsWith("(") && s.endsWith(")")) return false;
+        // Просто число — не надо
+        if (s.matches("-?\\d+(\\.\\d+)?")) return false;
+        // Одна переменная — не надо
+        if (s.matches("[xy]")) return false;
+        // Всё остальное — надо
+        return true;
+    }
+
+    // Нужны ли скобки вокруг знаменателя?
+    private boolean needsParensDen(String s) {
+        // Уже в скобках — не надо
+        if (s.startsWith("(") && s.endsWith(")")) return false;
+        // Просто число — не надо
+        if (s.matches("-?\\d+(\\.\\d+)?")) return false;
+        // Одна переменная — не надо
+        if (s.matches("[xy]")) return false;
+        // Всё остальное — надо
+        return true;
+    }
+
     private void onSolve() {
         String input = equationInput.getText();
-        log.info("Получен ввод: {}", input);
 
-        // Здесь позже передадим AST в Solver
-        if (mainController != null) {
-            mainController.showInput(input);
+        try {
+            Expr ast = Parser.parse(input);
+            Solution solution = SolverFactory.solve(ast);
+
+            log.info("Уравнение: {}", solution.originalEquation());
+            log.info("Ответ: {}", solution.answer());
+
+            // Показываем в SolutionViewer
+            if (mainController != null) {
+                mainController.showInput(solution.fullText());
+            }
+
+        } catch (Exception e) {
+            log.error("Ошибка при решении: {}", e.getMessage());
+            if (mainController != null) {
+                mainController.showInput("Ошибка: " + e.getMessage());
+            }
         }
     }
 
