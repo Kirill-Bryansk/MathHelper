@@ -16,17 +16,35 @@
         <Insets top="15" right="15" bottom="15" left="15"/>
     </padding>
 
+    <!-- Основное поле ввода -->
     <Label text="Введите уравнение:" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
 
     <HBox spacing="10">
-        <TextField fx:id="equationInput" promptText="Например: 3x + 5 = 0" HBox.hgrow="ALWAYS"/>
+        <TextField fx:id="equationInput" promptText="Например: 2x + (3x+1)/(2) = 0" HBox.hgrow="ALWAYS"/>
         <Button fx:id="solveButton" text="▶ Решить" styleClass="button-success"/>
         <Button fx:id="clearButton" text="🗑 Очистить" styleClass="button-danger"/>
     </HBox>
 
-    <Label text="💡 Примеры:" style="-fx-font-size: 12px; -fx-fill: #7f8c8d;"/>
-    <Label text="3x + 6 = 0" style="-fx-font-size: 12px; -fx-fill: #3498db;"/>
-    <Label text="2(x + 3) - 5 = 3(x - 1) + 7" style="-fx-font-size: 12px; -fx-fill: #3498db;"/>
-    <Label text="(2x + 1)/3 - (x - 2)/2 = 5" style="-fx-font-size: 12px; -fx-fill: #3498db;"/>
-    <Label text="(13.4 - y)*4.3 - 20.05 = 78.05 + 6.7y" style="-fx-font-size: 12px; -fx-fill: #3498db;"/>
+    <!-- Тетрадный вид (динамический) -->
+    <VBox fx:id="equationViewContainer" spacing="5"/>
+    <Label fx:id="errorLabel" text="" style="-fx-text-fill: red; -fx-font-size: 12px;" visible="false"/>
+
+    <!-- Мини-панель дроби -->
+    <VBox style="-fx-border-color: #ddd; -fx-border-radius: 5; -fx-padding: 10;" spacing="8">
+        <Label text="Вставить дробь:" style="-fx-font-size: 12px; -fx-font-weight: bold;"/>
+
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Label text="Числитель:" prefWidth="70"/>
+            <TextField fx:id="numeratorField" promptText="3x+1, 1/2x, 5" HBox.hgrow="ALWAYS"/>
+        </HBox>
+
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Label text="Знаменатель:" prefWidth="70"/>
+            <TextField fx:id="denominatorField" promptText="2, (x-1) — пусто = не дробь" HBox.hgrow="ALWAYS"/>
+        </HBox>
+
+        <HBox spacing="10" alignment="CENTER_RIGHT">
+            <Button fx:id="insertFractionBtn" text="➕ Вставить в уравнение" styleClass="button-success"/>
+        </HBox>
+    </VBox>
 </VBox>

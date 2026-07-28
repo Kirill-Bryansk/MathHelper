@@ -19,7 +19,6 @@ public class AppConfig {
     //Вкладки
     public static final List<TabConfig> TABS = List.of(
             new TabConfig("textInput", "📝 Текстовый ввод", "/ru/math/fxml/text_input.fxml"),
-            new TabConfig("constructor", "🔧 Конструктор", "/ru/math/fxml/constructor.fxml"),
             new TabConfig("history", "📜 История", "/ru/math/fxml/history.fxml")
     );
 
