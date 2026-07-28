@@ -24,7 +24,7 @@ public class TextInputController implements HasMainController {
 
         //Обработчики кнопок
         solveButton.setOnAction(e -> onSolve());
-        clearButton.setOnAction(e -> onSolve());
+        clearButton.setOnAction(e -> onClear());
 
         // Enter в поле ввода тоже запускает решение
         equationInput.setOnAction(e -> onSolve());
@@ -36,7 +36,7 @@ public class TextInputController implements HasMainController {
         log.info("Получен ввод: {}", input);
 
 
-        // Показываем ввод в SolutionViewer (нижняя панель) TODO после надо будет убрать
+        // Показываем ввод в SolutionViewer (нижняя панель)
         if (mainController != null) {
             mainController.showInput(input);
         }
@@ -53,6 +53,6 @@ public class TextInputController implements HasMainController {
 
     @Override
     public void setMainController(MainController mainController) {
-
+this.mainController = mainController; // Сохраняет ссылку
     }
 }
