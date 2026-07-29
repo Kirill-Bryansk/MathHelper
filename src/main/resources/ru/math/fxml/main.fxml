@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="ru.math.controllers.MainController"
+      spacing="10" prefHeight="750.0" prefWidth="1000.0">
+
+    <padding>
+        <Insets top="10" right="10" bottom="10" left="10"/>
+    </padding>
+
+    <!-- Заголовок -->
+    <HBox alignment="CENTER_LEFT" spacing="10">
+        <Label text="🧮 MathHelper" styleClass="label-title"/>
+        <Label text="Решение уравнений с пошаговым объяснением" styleClass="label-subtitle"/>
+    </HBox>
+
+    <!--  SplitPane для изменяемой высоты -->
+    <SplitPane fx:id="mainSplitPane" orientation="VERTICAL" VBox.vgrow="ALWAYS" dividerPositions="0.6">
+
+        <!-- Верхняя часть: вкладки -->
+        <TabPane fx:id="tabPane"/>
+
+        <!-- Нижняя часть: панель решения -->
+        <VBox fx:id="solutionPanel"/>
+
+    </SplitPane>
+</VBox>

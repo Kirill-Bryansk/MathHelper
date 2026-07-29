@@ -3,15 +3,16 @@
     <!-- Консольный аппендер -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <pattern>%highlight(%level) %logger{3} - %msg%n</pattern>
+            -- [%logger{1}]
         </encoder>
     </appender>
 
-    <!-- Файловый аппендер (для отладки) -->
+    <!-- Файловый аппендер (пишет в %APPDATA%/MathHelper, чтобы работало из Program Files) -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/uravnyashka.log</file>
+        <file>${app.data}/logs/uravnyashka.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>logs/uravnyashka.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>${app.data}/logs/uravnyashka.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>7</maxHistory>
         </rollingPolicy>
         <encoder>
@@ -20,11 +21,11 @@
     </appender>
 
     <!-- Корневой логгер -->
-    <root level="INFO">
+    <root level="DEBUG">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>
     </root>
 
     <!-- Для наших классов можно включить DEBUG -->
-    <logger name="ru.math.MathHelper" level="DEBUG"/>
+    <logger name="ru.math" level="DEBUG"/>
 </configuration>

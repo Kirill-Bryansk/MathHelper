@@ -7,7 +7,7 @@
 
   <groupId>ru.math</groupId>
   <artifactId>MathHelper</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0.0</version>
   <packaging>jar</packaging>
 
   <name>MathHelper</name>
@@ -16,14 +16,22 @@
   <properties>
     <java.version>21</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-    <lombok.version>1.18.38</lombok.version>
-    <javafx.version>21.0.2</javafx.version>
-    <jackson.version>2.17.1</jackson.version>
-    <logback.version>1.5.6</logback.version>
+    <!-- Обновленные версии -->
+    <lombok.version>1.18.34</lombok.version>
+    <javafx.version>21.0.5</javafx.version>
+    <jackson.version>2.18.2</jackson.version>
+    <logback.version>1.5.16</logback.version>
+    <junit.version>5.11.4</junit.version>
+
+    <!-- Плагины -->
+    <maven.compiler.version>3.13.0</maven.compiler.version>
+    <maven.shade.version>3.6.0</maven.shade.version>
+    <javafx.maven.version>0.0.8</javafx.maven.version>
   </properties>
 
-    <dependencies>
+  <dependencies>
     <!-- JavaFX -->
     <dependency>
       <groupId>org.openjfx</groupId>
@@ -35,6 +43,25 @@
       <artifactId>javafx-fxml</artifactId>
       <version>${javafx.version}</version>
     </dependency>
+    <!-- JavaFX модули для разных платформ -->
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-graphics</artifactId>
+      <version>${javafx.version}</version>
+      <classifier>win</classifier>
+    </dependency>
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-graphics</artifactId>
+      <version>${javafx.version}</version>
+      <classifier>linux</classifier>
+    </dependency>
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-graphics</artifactId>
+      <version>${javafx.version}</version>
+      <classifier>mac</classifier>
+    </dependency>
 
     <!-- Lombok -->
     <dependency>
@@ -44,7 +71,7 @@
       <scope>provided</scope>
     </dependency>
 
-    <!-- Jackson -->
+    <!-- Jackson для JSON -->
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
@@ -56,7 +83,7 @@
       <version>${jackson.version}</version>
     </dependency>
 
-    <!-- SLF4J + Logback -->
+    <!-- Logging -->
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
@@ -72,18 +99,26 @@
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
-      <version>5.11.3</version>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- AssertJ для красивых assert'ов -->
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <version>3.26.3</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
 
   <build>
     <plugins>
-      <!-- Компилятор с Lombok -->
+      <!-- Компилятор -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.11.0</version>
+        <version>${maven.compiler.version}</version>
         <configuration>
           <source>${java.version}</source>
           <target>${java.version}</target>
@@ -97,62 +132,71 @@
         </configuration>
       </plugin>
 
-      <!--
-          ⚠️ Spring Boot Maven Plugin ОТКЛЮЧЁН
-          Чтобы не создавал BOOT-INF структуру
-      -->
-      <!--
-      <plugin>
-          <groupId>org.springframework.boot</groupId>
-          <artifactId>spring-boot-maven-plugin</artifactId>
-          <configuration>
-              <mainClass>ru.math.MathHelper.MathHelperApplication</mainClass>
-              <layout>NONE</layout>
-              <excludes>
-                  <exclude>
-                      <groupId>org.projectlombok</groupId>
-                      <artifactId>lombok</artifactId>
-                  </exclude>
-              </excludes>
-          </configuration>
-      </plugin>
-      -->
-
-      <!-- Maven Assembly Plugin - создаёт JAR с зависимостями -->
+      <!-- Maven Shade Plugin - создаёт Fat JAR (лучше чем assembly) -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <version>3.7.1</version>
-        <configuration>
-          <archive>
-            <manifest>
-              <mainClass>ru.math.MathHelper.MathHelperApplication</mainClass>
-            </manifest>
-          </archive>
-          <descriptorRefs>
-            <descriptorRef>jar-with-dependencies</descriptorRef>
-          </descriptorRefs>
-          <finalName>MathHelper</finalName>
-          <appendAssemblyId>false</appendAssemblyId>
-        </configuration>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>${maven.shade.version}</version>
         <executions>
           <execution>
-            <id>make-assembly</id>
             <phase>package</phase>
             <goals>
-              <goal>single</goal>
+              <goal>shade</goal>
             </goals>
+            <configuration>
+              <createDependencyReducedPom>false</createDependencyReducedPom>
+              <finalName>${project.artifactId}</finalName>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <mainClass>ru.math.app.MainApp</mainClass>
+                </transformer>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer"/>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer"/>
+              </transformers>
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                    <exclude>module-info.class</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+            </configuration>
           </execution>
         </executions>
       </plugin>
 
-      <!-- JavaFX для разработки -->
+      <!-- JavaFX Maven Plugin -->
       <plugin>
         <groupId>org.openjfx</groupId>
         <artifactId>javafx-maven-plugin</artifactId>
-        <version>0.0.8</version>
+        <version>${javafx.maven.version}</version>
         <configuration>
-          <mainClass>ru.math.MathHelper.MathHelperApplication</mainClass>
+          <mainClass>ru.math.app.MainApp</mainClass>
+        </configuration>
+      </plugin>
+
+      <!-- JUnit 5 -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.5.2</version>
+      </plugin>
+
+      <!-- Проверка кода -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>3.6.0</version>
+        <configuration>
+          <configLocation>google_checks.xml</configLocation>
+          <encoding>UTF-8</encoding>
+          <consoleOutput>true</consoleOutput>
+          <failsOnError>false</failsOnError>
         </configuration>
       </plugin>
     </plugins>
