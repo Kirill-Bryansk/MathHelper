@@ -54,6 +54,21 @@
     -fx-background-color: #c0392b;
 }
 
+.exit-button {
+    -fx-background-color: #e74c3c;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 16 6 16;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+    -fx-cursor: hand;
+}
+
+.exit-button:hover {
+    -fx-background-color: #c0392b;
+}
+
 .button-success {
     -fx-background-color: #27ae60;
 }

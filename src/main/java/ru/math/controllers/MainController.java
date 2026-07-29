@@ -17,6 +17,7 @@ public class MainController {
     @FXML private VBox solutionPanel;
 
     private SolutionViewer solutionViewer;
+    private HistoryController historyController;
 
     @FXML
     public void initialize() {
@@ -39,6 +40,12 @@ public class MainController {
     public void showInput(String input) {
         log.info("[MainController] Отображение решения в SolutionViewer");
         solutionViewer.displayInput(input);
+
+        // Добавляем в историю
+        if (historyController != null) {
+            historyController.addEntry(input);
+        }
+
         // Переключаемся на первую вкладку
         if (tabPane.getTabs().size() > 0) {
             tabPane.getSelectionModel().select(0);
@@ -50,6 +57,17 @@ public class MainController {
     public void clearSolution() {
         log.info("[MainController] Очистка решения");
         solutionViewer.clear();
+    }
+
+    public void setHistoryController(HistoryController historyController) {
+        this.historyController = historyController;
+    }
+
+    // Выход
+    @FXML
+    private void handleExit() {
+        log.info("[MainController] Закрытие приложения");
+        javafx.application.Platform.exit();
     }
 
 }

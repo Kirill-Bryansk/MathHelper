@@ -7,6 +7,7 @@ import javafx.scene.Parent;
 import lombok.extern.slf4j.Slf4j;
 import ru.math.config.AppConfig;
 import ru.math.config.HasMainController;
+import ru.math.controllers.HistoryController;
 import ru.math.controllers.MainController;
 
 import java.io.IOException;
@@ -37,6 +38,11 @@ public class TabLoader {
                 // Передача контроллера вкладке
                 if (controller instanceof HasMainController hasMain) {
                     hasMain.setMainController(this.mainController);
+                }
+
+                // Если это вкладка истории — сохраняем ссылку в MainController
+                if (controller instanceof HistoryController historyCtrl) {
+                    this.mainController.setHistoryController(historyCtrl);
                 }
 
                 Tab tab = new Tab(config.title());

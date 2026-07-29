@@ -12,7 +12,7 @@ public class AppConfig {
     public static final int MIN_HEIGHT = 600;
 
     //Пути
-    public static final String ICON_PATH = "/ru/math/images/icon.ico";
+    public static final String ICON_PATH = "/ru/math/images/icon.png";
     public static final String CSS_PATH = "/ru/math/css/styles.css";
     public static final String MAIN_FXML = "/ru/math/fxml/main.fxml";
     
