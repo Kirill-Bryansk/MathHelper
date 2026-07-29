@@ -37,16 +37,18 @@ public class MainController {
 
     // Показать ввод
     public void showInput(String input) {
-        log.info("Отображение ввода: {}", input);
+        log.info("[MainController] Отображение решения в SolutionViewer");
         solutionViewer.displayInput(input);
         // Переключаемся на первую вкладку
         if (tabPane.getTabs().size() > 0) {
             tabPane.getSelectionModel().select(0);
+            log.debug("[MainController] Переключено на первую вкладку");
         }
     }
 
     // Очистить
     public void clearSolution() {
+        log.info("[MainController] Очистка решения");
         solutionViewer.clear();
     }
 

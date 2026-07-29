@@ -58,6 +58,7 @@ public class TextInputController implements HasMainController {
 
     // Парсинг + рендер + обработка ошибок
     private void parseAndRender(String input) {
+        log.debug("[TextInputController] Ввод: '{}'", input);
         if (input == null || input.trim().isEmpty()) {
             equationView.clear();
             errorLabel.setVisible(false);
@@ -70,14 +71,17 @@ public class TextInputController implements HasMainController {
             equationView.render(ast);
             errorLabel.setVisible(false);
             solveButton.setDisable(false);
+            log.debug("[TextInputController] Рендер успешно обновлён");
 
         } catch (ParseException e) {
-            // Неполный ввод — не прячем рендер, а просто не показываем ошибку
+            equationView.clear();
+            
             if (e.errorType() == ErrorType.UNEXPECTED_END) {
+                log.debug("[TextInputController] Неполный ввод, ждём продолжения");
                 errorLabel.setVisible(false);
                 solveButton.setDisable(true);
             } else {
-                // Реальная ошибка — показываем
+                log.warn("[TextInputController] Ошибка ввода: {}", e.getMessage());
                 errorLabel.setText(e.getMessage());
                 errorLabel.setVisible(true);
                 solveButton.setDisable(true);
@@ -133,21 +137,23 @@ public class TextInputController implements HasMainController {
 
     private void onSolve() {
         String input = equationInput.getText();
+        log.info("[TextInputController] Нажата кнопка 'Решить', ввод: '{}'", input);
 
         try {
             Expr ast = Parser.parse(input);
+            log.info("[TextInputController] AST построен, вызываем SolverFactory");
+            
             Solution solution = SolverFactory.solve(ast);
 
-            log.info("Уравнение: {}", solution.originalEquation());
-            log.info("Ответ: {}", solution.answer());
+            log.info("[TextInputController] Решение готово, ответ: {}", solution.answer());
+            log.debug("[TextInputController] Полное решение:\n{}", solution.fullText());
 
-            // Показываем в SolutionViewer
             if (mainController != null) {
                 mainController.showInput(solution.fullText());
             }
 
         } catch (Exception e) {
-            log.error("Ошибка при решении: {}", e.getMessage());
+            log.error("[TextInputController] Ошибка при решении: {}", e.getMessage(), e);
             if (mainController != null) {
                 mainController.showInput("Ошибка: " + e.getMessage());
             }

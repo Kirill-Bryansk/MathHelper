@@ -1,11 +1,12 @@
 package ru.math.parser;
 
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Сборка AST из токенов.
- * Обрабатывает: приоритет операций, неявное умножение, дроби, скобки.
  */
+@Slf4j
 public class Parser {
 
     private final List<Token> tokens;
@@ -17,8 +18,11 @@ public class Parser {
 
     // Удобный метод: строка → AST
     public static Expr parse(String input) {
+        log.debug("[Parser] Парсинг: '{}'", input);
         List<Token> tokens = new Tokenizer(input).tokenize();
-        return new Parser(tokens).parse();
+        Expr result = new Parser(tokens).parse();
+        log.debug("[Parser] AST: {}", result);
+        return result;
     }
 
     // Главный метод

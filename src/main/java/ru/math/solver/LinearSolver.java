@@ -4,8 +4,10 @@ import ru.math.parser.Expr;
 
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 // Решатель линейных уравнений: собирает a*x + b = 0
+@Slf4j
 public class LinearSolver implements Solver {
 
     // Внутреннее представление: a*x + b
@@ -22,33 +24,39 @@ public class LinearSolver implements Solver {
     @Override
     public Solution solve(Expr.Equation equation) {
         String original = formatExpr(equation);
+        log.info("[LinearSolver] Решаем уравнение: {}", original);
+
         List<Step> steps = new ArrayList<>();
+        steps.add(new Step("Исходное уравнение", original));
 
-        // Собираем коэффициенты из левой и правой части
-        steps.add(new Step("Раскрываем скобки и приводим дроби", original));
+        log.info("[LinearSolver] Сбор коэффициентов левой части...");
         Coeffs left = collect(equation.left(), steps);
-        Coeffs right = collect(equation.right(), steps);
+        log.info("[LinearSolver] Левая часть: {}*x + {}", left.a(), left.b());
 
-        // Переносим всё влево: left - right = 0
-        steps.add(new Step("Переносим члены с x влево, без x — вправо",
-                formatCoeffs(left.sub(right)) + " = 0"));
+        log.info("[LinearSolver] Сбор коэффициентов правой части...");
+        Coeffs right = collect(equation.right(), steps);
+        log.info("[LinearSolver] Правая часть: {}*x + {}", right.a(), right.b());
 
         Coeffs total = left.sub(right);
+        log.info("[LinearSolver] Приведено к виду: {}*x + {} = 0", total.a(), total.b());
 
-        // Решаем: a*x + b = 0 → x = -b/a
         if (total.a().isZero() && total.b().isZero()) {
+            log.info("[LinearSolver] Тождество (любое x)");
             return new Solution(original, steps, "x — любое число (тождество)", null);
         }
         if (total.a().isZero()) {
+            log.info("[LinearSolver] Противоречие (нет решений)");
             return new Solution(original, steps, "Нет решений (противоречие)", null);
         }
 
         Rational answer = total.b().mul(Rational.of(-1)).div(total.a());
-        steps.add(new Step("Делим обе части на " + total.a(),
-                "x = " + answer));
+        log.info("[LinearSolver] Ответ: x = {}", answer);
 
-        // Проверка
+        steps.add(new Step("Решение", "x = " + answer));
+
         String verification = buildVerification(equation, answer);
+        log.info("[LinearSolver] Проверка: {}", verification);
+
         return new Solution(original, steps, "x = " + answer, verification);
     }
 

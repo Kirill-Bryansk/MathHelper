@@ -27,5 +27,5 @@
     </root>
 
     <!-- Для наших классов можно включить DEBUG -->
-    <logger name="ru.math.MathHelper" level="DEBUG"/>
+    <logger name="ru.math" level="DEBUG"/>
 </configuration>
