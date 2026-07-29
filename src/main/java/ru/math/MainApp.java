@@ -57,6 +57,10 @@ public class MainApp extends Application {
     }
 
     public static void main(String[] args) {
+        // Указываем логбэку, куда писать логи — в домашнюю папку пользователя.
+        // Это нужно, чтобы приложение работало из Program Files (нет прав на запись).
+        String appData = System.getProperty("user.home") + "/.uravnyashka";
+        System.setProperty("app.data", appData);
         launch(args);
     }
 }
