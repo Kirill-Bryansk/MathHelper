@@ -47,9 +47,10 @@ public class EquationRenderer {
             }
             case Expr.BinOp op -> {
                 renderTo(op.left(), nodes);
-                // Пробелы вокруг + и -, но не вокруг *
-                if (op.op().equals("*")) {
-                    // Ничего не добавляем (неявное умножение 2x)
+                // Неявное умножение: 2x, 2(x+1)
+                // НО: число * число → показываем знак, иначе 3*1 сливается в 31
+                if (op.op().equals("*") && !(op.left() instanceof Expr.Num && op.right() instanceof Expr.Num)) {
+                    // Ничего не добавляем (неявное умножение 2x, 2(x+1))
                 } else {
                     nodes.add(createText(" " + op.op() + " "));
                 }
