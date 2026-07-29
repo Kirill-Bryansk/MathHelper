@@ -23,6 +23,18 @@ public class TextInserter {
     }
 
     /**
+     * Возвращает позицию, в которую будет произведена вставка.
+     */
+    public int getInsertPosition() {
+        String current = target.getText();
+        int pos = lastCaretPos;
+        if (pos < 0 || pos > current.length()) {
+            pos = current.length();
+        }
+        return pos;
+    }
+
+    /**
      * Вставляет текст в последнюю известную позицию курсора.
      * Возвращает фокус на поле и сдвигает курсор.
      */

@@ -27,6 +27,7 @@ public class TextInputController implements HasMainController {
     @FXML private Button insertFractionBtn;
     @FXML private VBox equationViewContainer;
     @FXML private Label errorLabel; // Добавь в FXML!
+    @FXML private Label hintLabel;
 
     private MainController mainController;
     private TextInserter textInserter;
@@ -53,6 +54,7 @@ public class TextInputController implements HasMainController {
 
         // Начальное состояние
         errorLabel.setVisible(false);
+        hintLabel.setVisible(false);
         solveButton.setDisable(true);
     }
 
@@ -70,6 +72,7 @@ public class TextInputController implements HasMainController {
             Expr ast = Parser.parse(input);
             equationView.render(ast);
             errorLabel.setVisible(false);
+            hintLabel.setVisible(false);
             solveButton.setDisable(false);
             log.debug("[TextInputController] Рендер успешно обновлён");
 
@@ -94,6 +97,25 @@ public class TextInputController implements HasMainController {
         String den = denominatorField.getText().trim();
 
         if (num.isEmpty()) return;
+
+        // Проверяем символ перед курсором — если цифра/переменная/),
+        // то вставка дроби создаст неоднозначность (3 + 1/3 → 31/3)
+        String current = equationInput.getText();
+        int pos = textInserter.getInsertPosition();
+        if (pos > 0 && !current.isEmpty()) {
+            char prev = current.charAt(pos - 1);
+            if (Character.isDigit(prev) || Character.isLetter(prev) || prev == ')') {
+                hintLabel.setText("Перед дробью нужен знак операции (+, -, *, /). " +
+                        "Иначе «" + prev + "» и дробь сольются в одно число.");
+                hintLabel.setVisible(true);
+                equationInput.requestFocus();
+                equationInput.positionCaret(pos);
+                return;
+            }
+        }
+
+        // Скрываем подсказку
+        hintLabel.setVisible(false);
 
         // Оборачиваем числитель, если нужно
         String numText = needsParens(num) ? "(" + num + ")" : num;
@@ -166,6 +188,7 @@ public class TextInputController implements HasMainController {
         denominatorField.clear();
         equationView.clear();
         errorLabel.setVisible(false);
+        hintLabel.setVisible(false);
         solveButton.setDisable(true);
 
         if (mainController != null) {

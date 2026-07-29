@@ -28,6 +28,7 @@
     <!-- Тетрадный вид (динамический) -->
     <VBox fx:id="equationViewContainer" spacing="5"/>
     <Label fx:id="errorLabel" text="" style="-fx-text-fill: red; -fx-font-size: 12px;" visible="false"/>
+    <Label fx:id="hintLabel" text="" style="-fx-text-fill: #cc8800; -fx-font-size: 12px;" visible="false"/>
 
     <!-- Мини-панель дроби -->
     <VBox style="-fx-border-color: #ddd; -fx-border-radius: 5; -fx-padding: 10;" spacing="8">

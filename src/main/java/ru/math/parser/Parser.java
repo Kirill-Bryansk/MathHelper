@@ -156,6 +156,10 @@ public class Parser {
         if (leftExpr instanceof Expr.Num) {
             return next.is(TokenType.VARIABLE) || next.is(TokenType.LPAREN);
         }
+        // После дроби — переменная или скобка: 2/5x = (2/5)x, 2/5(x+1)
+        if (leftExpr instanceof Expr.Frac) {
+            return next.is(TokenType.VARIABLE) || next.is(TokenType.LPAREN);
+        }
         return false;
     }
 
