@@ -140,7 +140,7 @@ public class LinearSolver implements Solver {
         return sb.toString();
     }
 
-    // Форматирование Expr в строку
+    // Форматирование Expr в строку (без лишних скобок)
     private String formatExpr(Expr expr) {
         return switch (expr) {
             case Expr.Num n -> formatNumber(n.value());
@@ -150,13 +150,31 @@ public class LinearSolver implements Solver {
                 String l = formatExpr(op.left());
                 String r = formatExpr(op.right());
                 if (op.op().equals("*") && (op.right() instanceof Expr.Group || op.right() instanceof Expr.Var)) {
-                    yield l + r;  // неявное умножение
+                    yield l + r;  // неявное умножение 2x или 2(x+1)
                 }
                 yield l + " " + op.op() + " " + r;
             }
-            case Expr.Frac f -> "(" + formatExpr(f.num()) + ")/(" + formatExpr(f.den()) + ")";
+            case Expr.Frac f -> {
+                String numStr = formatExpr(f.num());
+                String denStr = formatExpr(f.den());
+
+                // Если числитель уже в скобках (Group) или не требует их — не добавляем
+                String numPart = numStr.startsWith("(") || !needsParensExpr(f.num()) ? numStr : "(" + numStr + ")";
+                String denPart = denStr.startsWith("(") || !needsParensExpr(f.den()) ? denStr : "(" + denStr + ")";
+
+                yield numPart + "/" + denPart;
+            }
             case Expr.Equation e -> formatExpr(e.left()) + " = " + formatExpr(e.right());
         };
+    }
+
+    // Нужны ли скобки вокруг выражения при делении?
+    private boolean needsParensExpr(Expr expr) {
+        // Если это сложение или вычитание — скобки нужны: (8x - 1) / 5
+        if (expr instanceof Expr.BinOp op) {
+            return op.op().equals("+") || op.op().equals("-");
+        }
+        return false;
     }
 
     private String formatNumber(double v) {

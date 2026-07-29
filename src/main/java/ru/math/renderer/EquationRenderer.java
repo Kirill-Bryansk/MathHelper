@@ -68,12 +68,17 @@ public class EquationRenderer {
         box.setAlignment(Pos.CENTER);
         box.setPadding(new Insets(0, 2, 0, 2));
 
+        // В дроби числитель и знаменатель уже сгруппированы чертой.
+        // Если это Expr.Group — раскрываем его (убираем лишние скобки).
+        Expr num = (numExpr instanceof Expr.Group g) ? g.inner() : numExpr;
+        Expr den = (denExpr instanceof Expr.Group g) ? g.inner() : denExpr;
+
         // Собираем числитель и знаменатель в отдельные списки
         List<Node> numNodes = new ArrayList<>();
-        renderTo(numExpr, numNodes);
+        renderTo(num, numNodes);
 
         List<Node> denNodes = new ArrayList<>();
-        renderTo(denExpr, denNodes);
+        renderTo(den, denNodes);
 
         // Оборачиваем в HBox для выравнивания
         javafx.scene.layout.HBox numBox = new javafx.scene.layout.HBox(numNodes.toArray(new Node[0]));
