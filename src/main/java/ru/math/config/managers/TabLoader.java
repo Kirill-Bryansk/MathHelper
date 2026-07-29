@@ -11,8 +11,6 @@ import ru.math.controllers.HistoryController;
 import ru.math.controllers.MainController;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 @Slf4j
 public class TabLoader {

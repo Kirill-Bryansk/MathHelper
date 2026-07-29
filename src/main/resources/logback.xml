@@ -8,7 +8,7 @@
         </encoder>
     </appender>
 
-    <!-- Файловый аппендер (пишет в %APPDATA%/MathHelper, чтобы работало из Program Files) -->
+    <!-- Файловый аппендер (пишет в ~/.uravnyashka/logs, чтобы работало из Program Files) -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${app.data}/logs/uravnyashka.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">

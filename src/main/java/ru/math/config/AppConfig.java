@@ -5,7 +5,7 @@ import java.util.List;
 public class AppConfig {
 
     //Окно
-    public static final String WINDOW_TITLE = "Ученье свет, а не ученье всю жизнь на шее у родителей))";
+    public static final String WINDOW_TITLE = "SpecialForFoxy — решатель уравнений";
     public static final int WINDOW_WIDTH = 1000;
     public static final int WINDOW_HEIGHT = 750;
     public static final int MIN_WIDTH = 800;
