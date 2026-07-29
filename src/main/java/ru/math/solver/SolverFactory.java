@@ -1,6 +1,7 @@
 package ru.math.solver;
 
 import ru.math.parser.Expr;
+import ru.math.solver.service.ExprAnalyzer;
 
 // Определяет тип уравнения и выбирает подходящий решатель
 public class SolverFactory {
@@ -10,9 +11,12 @@ public class SolverFactory {
             throw new IllegalArgumentException("Это не уравнение");
         }
 
-        // Пока только линейные.
-        // if (isQuadratic(eq)) return new QuadraticSolver().solve(eq);
+        // Если переменная в знаменателе — рациональное уравнение
+        if (ExprAnalyzer.hasVarInDenominator(eq)) {
+            return new RationalSolver().solve(eq);
+        }
 
+        // Иначе — линейное
         return new LinearSolver().solve(eq);
     }
 }

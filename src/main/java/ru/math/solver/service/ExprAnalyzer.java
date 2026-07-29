@@ -51,4 +51,32 @@ public final class ExprAnalyzer {
             case Expr.Equation e -> hasDecimals(e.left()) || hasDecimals(e.right());
         };
     }
+
+    /**
+     * Есть ли переменная в знаменателе хотя бы одной дроби.
+     * 0.2/(x+3) → true, (x+1)/5 → false
+     */
+    public static boolean hasVarInDenominator(Expr expr) {
+        return switch (expr) {
+            case Expr.Frac f -> containsVar(f.den()) || hasVarInDenominator(f.num()) || hasVarInDenominator(f.den());
+            case Expr.BinOp op -> hasVarInDenominator(op.left()) || hasVarInDenominator(op.right());
+            case Expr.Group g -> hasVarInDenominator(g.inner());
+            case Expr.Equation e -> hasVarInDenominator(e.left()) || hasVarInDenominator(e.right());
+            default -> false;
+        };
+    }
+
+    /**
+     * Содержит ли выражение переменную.
+     */
+    public static boolean containsVar(Expr expr) {
+        return switch (expr) {
+            case Expr.Var v -> true;
+            case Expr.Num n -> false;
+            case Expr.Group g -> containsVar(g.inner());
+            case Expr.BinOp op -> containsVar(op.left()) || containsVar(op.right());
+            case Expr.Frac f -> containsVar(f.num()) || containsVar(f.den());
+            case Expr.Equation e -> containsVar(e.left()) || containsVar(e.right());
+        };
+    }
 }
