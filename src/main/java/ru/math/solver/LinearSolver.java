@@ -109,14 +109,14 @@ public class LinearSolver implements Solver {
 
         // Шаг 9: деление на коэффициент
         Rational answer = total.b().mul(Rational.of(-1)).div(total.a());
-        steps.add(new Step("Делим на " + total.a(), "x = " + answer));
-        log.info("[LinearSolver] Ответ: x = {}", answer);
+        steps.add(new Step("Делим на " + total.a(), "x = " + answer.formatAnswer()));
+        log.info("[LinearSolver] Ответ: x = {}", answer.formatAnswer());
 
         // Шаг 10: проверка
         String verification = buildVerification(equation, answer);
         log.info("[LinearSolver] Проверка выполнена");
 
-        return new Solution(original, steps, "x = " + answer, verification);
+        return new Solution(original, steps, "x = " + answer.formatAnswer(), verification);
     }
 
     // ========================
@@ -171,7 +171,7 @@ public class LinearSolver implements Solver {
         try {
             Rational leftVal = evaluate(eq.left(), answer);
             Rational rightVal = evaluate(eq.right(), answer);
-            return "Подставляем x = " + answer + ":\n" +
+            return "Подставляем x = " + answer.formatAnswer() + ":\n" +
                    "  " + ExprFormatter.format(eq.left()) + " = " + ExprFormatter.format(eq.right()) + "\n" +
                    "  " + leftVal + " = " + rightVal + " " +
                    (leftVal.equals(rightVal) ? "✅" : "❌");

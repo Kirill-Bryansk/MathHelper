@@ -14,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Решатель рациональных уравнений (переменная в знаменателе).
- *
  * Поток:
  * 1. Десятичные → дроби
  * 2. Находим ОДЗ (знаменатели ≠ 0)
@@ -117,8 +116,8 @@ public class RationalSolver implements Solver {
         }
 
         Rational answer = total.b().mul(Rational.of(-1)).div(total.a());
-        steps.add(new Step("Делим на " + total.a(), "x = " + answer));
-        log.info("[RationalSolver] Ответ: x = {}", answer);
+        steps.add(new Step("Делим на " + total.a(), "x = " + answer.formatAnswer()));
+        log.info("[RationalSolver] Ответ: x = {}", answer.formatAnswer());
 
         // Шаг 9: проверка ОДЗ
         boolean odzOk = true;
@@ -136,17 +135,17 @@ public class RationalSolver implements Solver {
         }
 
         if (!odzOk) {
-            steps.add(new Step("Проверяем ОДЗ", "x = " + answer + " не входит в ОДЗ ❌"));
+            steps.add(new Step("Проверяем ОДЗ", "x = " + answer.formatAnswer() + " не входит в ОДЗ ❌"));
             return new Solution(original, steps, "Нет решений (корень не входит в ОДЗ)", null);
         }
 
-        steps.add(new Step("Проверяем ОДЗ", "x = " + answer + " входит в ОДЗ ✅"));
+        steps.add(new Step("Проверяем ОДЗ", "x = " + answer.formatAnswer() + " входит в ОДЗ ✅"));
 
         // Шаг 10: проверка подстановкой
         String verification = buildVerification(equation, answer);
         log.info("[RationalSolver] Проверка выполнена");
 
-        return new Solution(original, steps, "x = " + answer, verification);
+        return new Solution(original, steps, "x = " + answer.formatAnswer(), verification);
     }
 
     // ========================
@@ -339,7 +338,7 @@ public class RationalSolver implements Solver {
         try {
             Rational leftVal = evaluate(eq.left(), answer);
             Rational rightVal = evaluate(eq.right(), answer);
-            return "Подставляем x = " + answer + ":\n" +
+            return "Подставляем x = " + answer.formatAnswer() + ":\n" +
                    "  " + ExprFormatter.format(eq.left()) + " = " + ExprFormatter.format(eq.right()) + "\n" +
                    "  " + leftVal + " = " + rightVal + " " +
                    (leftVal.equals(rightVal) ? "✅" : "❌");

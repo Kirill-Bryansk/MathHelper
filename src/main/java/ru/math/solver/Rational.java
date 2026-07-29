@@ -29,6 +29,60 @@ public record Rational(long num, long den) {
         return num + "/" + den;
     }
 
+    /**
+     * Форматировать ответ для пользователя:
+     * - Целое: "5"
+     * - Правильная дробь: "3/4"
+     * - Неправильная дробь: "823/20 = 41 3/20 = 41.15"
+     */
+    public String formatAnswer() {
+        // Целое число
+        if (den == 1) return String.valueOf(num);
+
+        // Правильная дробь — только a/b
+        if (Math.abs(num) < den) return num + "/" + den;
+
+        // Неправильная дробь — показываем все формы
+        long whole = num / den;
+        long remainder = Math.abs(num) % den;
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(num).append("/").append(den);
+
+        // Смешанная дробь: 41 3/20
+        if (remainder == 0) {
+            sb.append(" = ").append(whole);
+        } else {
+            sb.append(" = ").append(whole).append(" ").append(remainder).append("/").append(den);
+        }
+
+        // Десятичная: 41.15 (если не бесконечная)
+        double decimal = (double) num / den;
+        // Проверяем, что десятичная дробь конечная (знаменатель = 2^a * 5^b)
+        if (isTerminatingDecimal(den)) {
+            sb.append(" = ").append(formatDecimal(decimal));
+        }
+
+        return sb.toString();
+    }
+
+    // Проверка, что знаменатель даёт конечную десятичную дробь
+    private boolean isTerminatingDecimal(long denominator) {
+        long d = denominator;
+        while (d % 2 == 0) d /= 2;
+        while (d % 5 == 0) d /= 5;
+        return d == 1;
+    }
+
+    // Форматирование десятичной дроби без лишних нулей
+    private String formatDecimal(double value) {
+        if (value == (long) value) return String.valueOf((long) value);
+        // Округляем до 10 знаков, убираем лишние нули
+        String s = String.format("%.10f", value).replaceAll("0+$", "");
+        if (s.endsWith(".")) s = s.substring(0, s.length() - 1);
+        return s;
+    }
+
     // Создание из double (3.5 → 7/2, 3.0 → 3/1)
     public static Rational of(double value) {
         if (value == (long) value) {
