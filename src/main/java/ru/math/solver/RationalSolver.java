@@ -1,7 +1,6 @@
 package ru.math.solver;
 
 import ru.math.parser.Expr;
-import ru.math.solver.service.DecimalConverter;
 import ru.math.solver.service.ExprAnalyzer;
 import ru.math.solver.service.ExprFormatter;
 import ru.math.solver.service.ExprSimplifier;
@@ -30,20 +29,16 @@ public class RationalSolver implements Solver {
         String original = ExprFormatter.format(equation);
         log.info("[RationalSolver] Решаем: {}", original);
 
+        boolean preferDecimal = ExprAnalyzer.hasDecimals(equation);
+        log.debug("[RationalSolver] Режим: preferDecimal={}", preferDecimal);
+
         List<Step> steps = new ArrayList<>();
         Expr.Equation current = equation;
 
         // Шаг 0: исходное уравнение
         steps.add(new Step("Исходное уравнение", original));
 
-        // Шаг 1: десятичные → обыкновенные
-        if (ExprAnalyzer.hasDecimals(current)) {
-            current = toEquation(DecimalConverter.convert(current));
-            steps.add(step("Записываем десятичные дроби как обыкновенные", current));
-            log.debug("[RationalSolver] После конвертации: {}", ExprFormatter.format(current));
-        }
-
-        // Шаг 2: находим ОДЗ
+        // Шаг 1: находим ОДЗ
         List<Expr> denominators = new ArrayList<>();
         collectDenominatorsWithVar(current.left(), denominators);
         collectDenominatorsWithVar(current.right(), denominators);
@@ -52,7 +47,6 @@ public class RationalSolver implements Solver {
         for (Expr den : denominators) {
             try {
                 Coeffs c = LinearCollector.collect(den);
-                // den = a*x + b ≠ 0 → x ≠ -b/a
                 if (!c.a().isZero()) {
                     Rational val = c.b().mul(Rational.of(-1)).div(c.a());
                     odzConditions.add("x ≠ " + val);
@@ -67,35 +61,34 @@ public class RationalSolver implements Solver {
             log.debug("[RationalSolver] ОДЗ: {}", odzConditions);
         }
 
-        // Шаг 3: cross-multiply
-        // Собираем все знаменатели (с переменной) и умножаем обе части на их произведение
+        // Шаг 2: cross-multiply
         Expr multiplier = buildMultiplier(denominators);
         current = crossMultiply(current, multiplier);
         steps.add(step("Умножаем обе части на " + ExprFormatter.format(multiplier), current));
         log.debug("[RationalSolver] После cross-multiply: {}", ExprFormatter.format(current));
 
-        // Шаг 4: раскрытие скобок
+        // Шаг 3: раскрытие скобок
         if (ExprAnalyzer.hasBrackets(current)) {
             current = toEquation(ExprSimplifier.expand(current));
             steps.add(step("Раскрываем скобки", current));
             log.debug("[RationalSolver] После раскрытия: {}", ExprFormatter.format(current));
         }
 
-        // Шаг 5: упрощение
-        Expr.Equation combined = toEquation(ExprSimplifier.combine(current));
+        // Шаг 4: упрощение
+        Expr.Equation combined = toEquation(ExprSimplifier.combine(current, preferDecimal));
         if (!ExprFormatter.format(combined).equals(ExprFormatter.format(current))) {
             current = combined;
             steps.add(step("Приводим подобные слагаемые", current));
             log.debug("[RationalSolver] После упрощения: {}", ExprFormatter.format(current));
         }
 
-        // Шаг 6: перенос
-        current = moveTerms(current);
+        // Шаг 5: перенос
+        current = moveTerms(current, preferDecimal);
         steps.add(step("Переносим x влево, числа вправо", current));
         log.debug("[RationalSolver] После переноса: {}", ExprFormatter.format(current));
 
-        // Шаг 7: упрощение после переноса
-        combined = toEquation(ExprSimplifier.combine(current));
+        // Шаг 6: упрощение после переноса
+        combined = toEquation(ExprSimplifier.combine(current, preferDecimal));
         if (!ExprFormatter.format(combined).equals(ExprFormatter.format(current))) {
             current = combined;
             steps.add(step("Приводим подобные", current));
@@ -297,17 +290,27 @@ public class RationalSolver implements Solver {
     /**
      * Rational → Expr, сохраняя точность.
      */
-    private static Expr rationalToExpr(Rational r) {
+    private static Expr rationalToExpr(Rational r, boolean preferDecimal) {
         if (r.den() == 1) {
             return new Expr.Num(r.num());
         }
+        if (preferDecimal && isTerminatingDecimal(r.den())) {
+            return new Expr.Num(r.toDouble());
+        }
         return new Expr.Frac(new Expr.Num(r.num()), new Expr.Num(r.den()));
+    }
+
+    private static boolean isTerminatingDecimal(long den) {
+        long d = den;
+        while (d % 2 == 0) d /= 2;
+        while (d % 5 == 0) d /= 5;
+        return d == 1;
     }
 
     /**
      * Перенос членов: x влево, числа вправо.
      */
-    private Expr.Equation moveTerms(Expr.Equation eq) {
+    private Expr.Equation moveTerms(Expr.Equation eq, boolean preferDecimal) {
         Coeffs left = LinearCollector.collect(eq.left());
         Coeffs right = LinearCollector.collect(eq.right());
         Coeffs total = left.sub(right);
@@ -316,9 +319,9 @@ public class RationalSolver implements Solver {
                 ? new Expr.Num(0)
                 : total.a().isOne()
                     ? new Expr.Var("x")
-                    : new Expr.BinOp(rationalToExpr(total.a()), "*", new Expr.Var("x"));
+                    : new Expr.BinOp(rationalToExpr(total.a(), preferDecimal), "*", new Expr.Var("x"));
 
-        Expr rightExpr = rationalToExpr(total.b().mul(Rational.of(-1)));
+        Expr rightExpr = rationalToExpr(total.b().mul(Rational.of(-1)), preferDecimal);
         return new Expr.Equation(leftExpr, rightExpr);
     }
 
