@@ -14,7 +14,25 @@ public class Tokenizer {
     private int pos = 0;
 
     public Tokenizer(String input) {
-        this.input = input == null ? "" : input.trim();
+        String normalized = normalize(input);
+        this.input = normalized == null ? "" : normalized.trim();
+    }
+
+    // Заменяет Unicode-варианты математических символов на ASCII-эквиваленты
+    // (уравнения часто копируются из Word/PDF/веб-страниц)
+    private static String normalize(String s) {
+        if (s == null) return null;
+        return s
+                .replace("−", "-")  // U+2212 MINUS SIGN
+                .replace("–", "-")  // U+2013 EN DASH
+                .replace("—", "-")  // U+2014 EM DASH
+                .replace("＋", "+")  // U+FF0B FULLWIDTH PLUS
+                .replace("＊", "*")  // U+FF0A FULLWIDTH ASTERISK
+                .replace("／", "/")  // U+FF0F FULLWIDTH SOLIDUS
+                .replace("＝", "=")  // U+FF1D FULLWIDTH EQUALS
+                .replace("（", "(")  // U+FF08 FULLWIDTH LPAREN
+                .replace("）", ")")  // U+FF09 FULLWIDTH RPAREN
+                .replace("．", "."); // U+FF0E FULLWIDTH FULL STOP
     }
 
     // Главный метод: строка → список токенов

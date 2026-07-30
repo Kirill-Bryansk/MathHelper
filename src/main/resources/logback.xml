@@ -21,11 +21,11 @@
     </appender>
 
     <!-- Корневой логгер -->
-    <root level="INFO">
+    <root level="DEBUG">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>
     </root>
 
     <!-- Для наших классов можно включить DEBUG -->
-    <logger name="ru.math" level="INFO"/>
+    <logger name="ru.math" level="DEBUG"/>
 </configuration>

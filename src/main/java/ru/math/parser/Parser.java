@@ -160,6 +160,11 @@ public class Parser {
         if (leftExpr instanceof Expr.Frac) {
             return next.is(TokenType.VARIABLE) || next.is(TokenType.LPAREN);
         }
+        // После бинарной операции (включая унарный минус, преобразованный в 0 - X):
+        // -3x, -3(x+1), 1+2x, 1-2(x+1) — неявное умножение
+        if (leftExpr instanceof Expr.BinOp) {
+            return next.is(TokenType.VARIABLE) || next.is(TokenType.LPAREN);
+        }
         return false;
     }
 
