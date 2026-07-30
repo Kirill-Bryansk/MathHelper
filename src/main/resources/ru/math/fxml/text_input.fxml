@@ -4,6 +4,7 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
@@ -30,22 +31,31 @@
     <Label fx:id="errorLabel" text="" style="-fx-text-fill: red; -fx-font-size: 12px;" visible="false"/>
     <Label fx:id="hintLabel" text="" style="-fx-text-fill: #cc8800; -fx-font-size: 12px;" visible="false"/>
 
-    <!-- Мини-панель дроби -->
-    <VBox style="-fx-border-color: #ddd; -fx-border-radius: 5; -fx-padding: 10;" spacing="8">
-        <Label text="Вставить дробь:" style="-fx-font-size: 12px; -fx-font-weight: bold;"/>
+    <!-- Нижняя панель: дробь слева, кнопки калькулятора справа -->
+    <HBox spacing="10">
+        <!-- Компактная панель дроби -->
+        <VBox style="-fx-border-color: #ddd; -fx-border-radius: 5; -fx-padding: 8;" spacing="5" HBox.hgrow="ALWAYS">
+            <Label text="Вставить дробь:" style="-fx-font-size: 11px; -fx-font-weight: bold;"/>
+            <HBox spacing="5" alignment="CENTER_LEFT">
+                <TextField fx:id="numeratorField" promptText="Числитель" prefWidth="100"/>
+                <Label text="/" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #555;"/>
+                <TextField fx:id="denominatorField" promptText="Знаменатель" prefWidth="100"/>
+                <Button fx:id="insertFractionBtn" text="+" prefWidth="30" prefHeight="30"
+                        style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-padding: 0;"/>
+            </HBox>
+        </VBox>
 
-        <HBox spacing="10" alignment="CENTER_LEFT">
-            <Label text="Числитель:" prefWidth="70"/>
-            <TextField fx:id="numeratorField" promptText="3x+1, 1/2x, 5" HBox.hgrow="ALWAYS"/>
-        </HBox>
+        <!-- Панель кнопок калькулятора -->
+        <GridPane hgap="4" vgap="4" alignment="CENTER" styleClass="calc-panel">
+            <Button text="(" onAction="#insertCalcButton" prefWidth="40" prefHeight="35" styleClass="calc-button"/>
+            <Button text=")" onAction="#insertCalcButton" prefWidth="40" prefHeight="35" styleClass="calc-button" GridPane.columnIndex="1"/>
+            <Button text="." onAction="#insertCalcButton" prefWidth="40" prefHeight="35" styleClass="calc-button" GridPane.columnIndex="2"/>
+            <Button text="+" onAction="#insertCalcButton" prefWidth="40" prefHeight="35" styleClass="calc-button" GridPane.columnIndex="3"/>
 
-        <HBox spacing="10" alignment="CENTER_LEFT">
-            <Label text="Знаменатель:" prefWidth="70"/>
-            <TextField fx:id="denominatorField" promptText="2, (x-1) — пусто = не дробь" HBox.hgrow="ALWAYS"/>
-        </HBox>
-
-        <HBox spacing="10" alignment="CENTER_RIGHT">
-            <Button fx:id="insertFractionBtn" text="➕ Вставить в уравнение" styleClass="button-success"/>
-        </HBox>
-    </VBox>
+            <Button text="-" onAction="#insertCalcButton" prefWidth="40" prefHeight="35" styleClass="calc-button" GridPane.rowIndex="1"/>
+            <Button text="*" onAction="#insertCalcButton" prefWidth="40" prefHeight="35" styleClass="calc-button" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+            <Button text=":" onAction="#insertCalcButton" prefWidth="40" prefHeight="35" styleClass="calc-button" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+            <Button text="/" onAction="#insertCalcButton" prefWidth="40" prefHeight="35" styleClass="calc-button" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
+        </GridPane>
+    </HBox>
 </VBox>

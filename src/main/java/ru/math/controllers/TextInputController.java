@@ -1,5 +1,6 @@
 package ru.math.controllers;
 
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -131,6 +132,18 @@ public class TextInputController implements HasMainController {
 
         numeratorField.clear();
         denominatorField.clear();
+    }
+
+    @FXML
+    private void insertCalcButton(ActionEvent e) {
+        Button btn = (Button) e.getSource();
+        String text = btn.getText();
+        // Двоеточие нормализуем в слеш для совместимости с парсером
+        if (":".equals(text)) {
+            text = "/";
+        }
+        textInserter.insert(text);
+        equationInput.requestFocus();
     }
 
     // Нужны ли скобки вокруг числителя?
