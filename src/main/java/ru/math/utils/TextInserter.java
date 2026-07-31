@@ -10,13 +10,20 @@ import javafx.scene.control.TextField;
  * - Если поле в фокусе — вставка по позиции каретки (можно кликнуть в середину).
  * - Если поле НЕ в фокусе (например, нажата кнопка экранной клавиатуры) —
  *   вставка в конец текста.
+ * - Ограничение maxLength: при превышении вставка игнорируется.
  */
 public class TextInserter {
 
     private final TextField target;
+    private final int maxLength;
 
     public TextInserter(TextField target) {
+        this(target, Integer.MAX_VALUE);
+    }
+
+    public TextInserter(TextField target, int maxLength) {
         this.target = target;
+        this.maxLength = maxLength;
     }
 
     /**
@@ -33,12 +40,16 @@ public class TextInserter {
 
     /**
      * Вставляет текст в текущую позицию (или в конец, если поле не в фокусе).
+     * Проверяет ограничение по длине.
      */
     public void insert(String text) {
         if (text == null || text.isEmpty()) return;
 
         String current = target.getText();
         int pos = getInsertPosition();
+
+        // Проверка лимита длины
+        if (current.length() + text.length() > maxLength) return;
 
         String newText = current.substring(0, pos) + text + current.substring(pos);
         target.setText(newText);

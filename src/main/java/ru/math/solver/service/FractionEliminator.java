@@ -63,7 +63,7 @@ public final class FractionEliminator {
                     Rational mult = factor.div(den);
                     yield scale(f.num(), mult);
                 }
-                yield new Expr.Frac(multiplyBy(f.num(), factor), f.den());
+                yield new Expr.Frac(multiplyBy(f.num(), factor), f.den(), f.colon());
             }
             case Expr.BinOp op when op.op().equals("+") ->
                 new Expr.BinOp(multiplyBy(op.left(), factor), "+", multiplyBy(op.right(), factor));
@@ -91,7 +91,7 @@ public final class FractionEliminator {
             case Expr.BinOp op when op.op().equals("*") ->
                 new Expr.BinOp(SolverUtils.rationalToExpr(factor, false), "*", expr);
             case Expr.Group g -> new Expr.Group(scale(g.inner(), factor));
-            case Expr.Frac f -> new Expr.Frac(scale(f.num(), factor), f.den());
+            case Expr.Frac f -> new Expr.Frac(scale(f.num(), factor), f.den(), f.colon());
             default -> new Expr.BinOp(SolverUtils.rationalToExpr(factor, false), "*", expr);
         };
     }

@@ -34,6 +34,15 @@ public final class ExprFormatter {
     }
 
     private static String formatFrac(Expr.Frac f) {
+        // Двоеточие: "a : b" вместо "a/b"
+        if (f.colon()) {
+            String num = format(f.num());
+            String den = format(f.den());
+            if (needsParens(f.num())) num = "(" + num + ")";
+            if (needsParens(f.den())) den = "(" + den + ")";
+            return num + " : " + den;
+        }
+
         String num = format(f.num());
         String den = format(f.den());
 

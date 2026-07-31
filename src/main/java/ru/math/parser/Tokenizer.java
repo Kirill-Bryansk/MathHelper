@@ -30,7 +30,9 @@ public class Tokenizer {
                 .replace("＝", "=")  // U+FF1D FULLWIDTH EQUALS
                 .replace("（", "(")  // U+FF08 FULLWIDTH LPAREN
                 .replace("）", ")")  // U+FF09 FULLWIDTH RPAREN
-                .replace("．", "."); // U+FF0E FULLWIDTH FULL STOP
+                .replace("．", ".") // U+FF0E FULLWIDTH FULL STOP
+                .replace("∶", ":")  // U+2236 RATIO
+                .replace("÷", ":"); // U+00F7 DIVISION SIGN → двоеточие
     }
 
     // Главный метод: строка → список токенов
@@ -116,6 +118,7 @@ public class Tokenizer {
             case '-' -> new Token(TokenType.MINUS, "-", pos);
             case '*' -> new Token(TokenType.STAR, "*", pos);
             case '/' -> new Token(TokenType.SLASH, "/", pos);
+            case ':' -> new Token(TokenType.COLON, ":", pos);
             case '=' -> new Token(TokenType.EQUALS, "=", pos);
             case '(' -> new Token(TokenType.LPAREN, "(", pos);
             case ')' -> new Token(TokenType.RPAREN, ")", pos);
@@ -137,7 +140,8 @@ public class Tokenizer {
         }
         if (next < input.length()) {
             char nextChar = input.charAt(next);
-            if (nextChar == '+' || nextChar == '*' || nextChar == '/' || nextChar == '=') {
+            if (nextChar == '+' || nextChar == '*' || nextChar == '/'
+                    || nextChar == ':' || nextChar == '=' || nextChar == ')') {
                 throw new ParseException(ErrorType.UNEXPECTED_TOKEN, next, String.valueOf(nextChar));
             }
         }

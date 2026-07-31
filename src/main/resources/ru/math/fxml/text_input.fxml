@@ -22,7 +22,7 @@
     <Label text="Введите уравнение:" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
 
     <HBox spacing="10">
-        <TextField fx:id="equationInput" promptText="Например: 2*x + (3*x+1)/2 = 0" HBox.hgrow="ALWAYS"/>
+        <TextField fx:id="equationInput" promptText="Например: 19/7*x : 26/9 = 54/13 : 28/19" HBox.hgrow="ALWAYS"/>
         <Button fx:id="solveButton" text="▶ Решить" styleClass="button-success"/>
         <Button fx:id="clearButton" text="🗑 Очистить" styleClass="button-danger"/>
     </HBox>
@@ -89,7 +89,7 @@
             <Button text="." onAction="#insertCalcButton" prefWidth="42" prefHeight="32" styleClass="calc-button"
                     GridPane.columnIndex="4" GridPane.rowIndex="2"/>
 
-            <!-- Ряд 4: 0 x y / = -->
+            <!-- Ряд 4: 0 x y / : -->
             <Button text="0" onAction="#insertCalcButton" prefWidth="42" prefHeight="32" styleClass="calc-button"
                     GridPane.columnIndex="0" GridPane.rowIndex="3"/>
             <Button text="x" onAction="#insertCalcButton" prefWidth="42" prefHeight="32" styleClass="calc-button-var"
@@ -98,12 +98,17 @@
                     GridPane.columnIndex="2" GridPane.rowIndex="3"/>
             <Button text="/" onAction="#insertCalcButton" prefWidth="42" prefHeight="32" styleClass="calc-button-op"
                     GridPane.columnIndex="3" GridPane.rowIndex="3"/>
-            <Button text="=" onAction="#insertCalcButton" prefWidth="42" prefHeight="32" styleClass="calc-button-eq"
+            <Button text=":" onAction="#insertCalcButton" prefWidth="42" prefHeight="32" styleClass="calc-button-op"
                     GridPane.columnIndex="4" GridPane.rowIndex="3"/>
 
-            <!-- Ряд 5: ⌫ на всю ширину -->
-            <Button text="⌫  Стереть" onAction="#handleBackspace" prefHeight="32" styleClass="calc-button-back"
-                    GridPane.columnIndex="0" GridPane.rowIndex="4" GridPane.columnSpan="5" GridPane.hgrow="ALWAYS"/>
+            <!-- Ряд 5: = и ⌫ одинакового размера (каждая на 2 колонки) -->
+            <HBox spacing="4" GridPane.columnIndex="0" GridPane.rowIndex="4"
+                  GridPane.columnSpan="5" alignment="CENTER">
+                <Button text="=" onAction="#insertCalcButton" prefHeight="32"
+                        styleClass="calc-button-eq" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                <Button text="⌫" onAction="#handleBackspace" prefHeight="32"
+                        styleClass="calc-button-back" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+            </HBox>
         </GridPane>
     </HBox>
 </VBox>

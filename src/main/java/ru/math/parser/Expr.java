@@ -14,7 +14,13 @@ public sealed interface Expr {
     record BinOp(Expr left, String op, Expr right) implements Expr {}
 
     // Дробь: числитель / знаменатель
-    record Frac(Expr num, Expr den) implements Expr {}
+    // colon=true — создана двоеточием (a : b), рендерится как "a : b"
+    // colon=false — создана слэшем (a / b), рендерится как дробная черта
+    record Frac(Expr num, Expr den, boolean colon) implements Expr {
+        public Frac(Expr num, Expr den) {
+            this(num, den, false);
+        }
+    }
 
     // Выражение в скобках: ( ... )
     record Group(Expr inner) implements Expr {}

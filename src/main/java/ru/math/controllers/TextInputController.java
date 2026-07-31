@@ -32,6 +32,9 @@ public class TextInputController implements HasMainController {
     @FXML private Label errorLabel;
     @FXML private Label hintLabel;
 
+    private static final int EQUATION_MAX_LENGTH = 150;
+    private static final int FRACTION_MAX_LENGTH = 6;
+
     private MainController mainController;
     private TextInserter equationInserter;
     private TextInserter numeratorInserter;
@@ -47,10 +50,10 @@ public class TextInputController implements HasMainController {
         equationView = new EquationView();
         equationViewContainer.getChildren().add(equationView);
 
-        equationInserter = new TextInserter(equationInput);
-        numeratorInserter = new TextInserter(numeratorField);
-        denominatorInserter = new TextInserter(denominatorField);
-        integerInserter = new TextInserter(integerField);
+        equationInserter = new TextInserter(equationInput, EQUATION_MAX_LENGTH);
+        numeratorInserter = new TextInserter(numeratorField, FRACTION_MAX_LENGTH);
+        denominatorInserter = new TextInserter(denominatorField, FRACTION_MAX_LENGTH);
+        integerInserter = new TextInserter(integerField, FRACTION_MAX_LENGTH);
 
         // Запоминаем последнее поле в фокусе — нужно для экранной клавиатуры,
         // т.к. клик по кнопке уводит фокус с поля.
@@ -60,14 +63,26 @@ public class TextInputController implements HasMainController {
         denominatorField.focusedProperty().addListener((o, ov, nv) -> { if (nv) lastFocusedField = denominatorField; });
         integerField.focusedProperty().addListener((o, ov, nv) -> { if (nv) lastFocusedField = integerField; });
 
-        // equationInput: полностью блокируем физическую клавиатуру.
-        // Ввод только через экранную клавиатуру (TextInserter.insert).
-        equationInput.addEventFilter(KeyEvent.KEY_TYPED, e -> e.consume());
+        // equationInput: разрешаем только цифры с физической клавиатуры.
+        // Остальные символы — только через экранную клавиатуру.
+        equationInput.addEventFilter(KeyEvent.KEY_TYPED, e -> {
+            String ch = e.getCharacter();
+            if (ch == null || ch.isEmpty()) return;
+            char c = ch.charAt(0);
+            if (!Character.isDigit(c)) {
+                e.consume();
+            }
+        });
 
-        // Поля дроби: разрешаем только цифры и минус (для отрицательных).
-        integerField.addEventFilter(KeyEvent.KEY_TYPED, e -> filterDigitKey(e));
-        numeratorField.addEventFilter(KeyEvent.KEY_TYPED, e -> filterDigitKey(e));
-        denominatorField.addEventFilter(KeyEvent.KEY_TYPED, e -> filterDigitKey(e));
+        // Поля дроби: полностью блокируем физическую клавиатуру.
+        integerField.addEventFilter(KeyEvent.KEY_TYPED, e -> e.consume());
+        numeratorField.addEventFilter(KeyEvent.KEY_TYPED, e -> e.consume());
+        denominatorField.addEventFilter(KeyEvent.KEY_TYPED, e -> e.consume());
+
+        // Скрываем подсказку при возврате фокуса на основное поле
+        equationInput.focusedProperty().addListener((o, ov, nv) -> {
+            if (nv) hintLabel.setVisible(false);
+        });
 
         // Динамический парсинг и рендеринг
         equationInput.textProperty().addListener((obs, old, newVal) -> {
@@ -197,6 +212,16 @@ public class TextInputController implements HasMainController {
     private void insertCalcButton(ActionEvent e) {
         Button btn = (Button) e.getSource();
         String text = btn.getText();
+
+        // Если активное поле — поле дроби, разрешаем только цифры и минус
+        if (isFractionField(lastFocusedField)) {
+            if (!isDigitOrMinus(text)) {
+                showHint("В поле дроби можно вводить только числа");
+                return;
+            }
+            hintLabel.setVisible(false);
+        }
+
         getActiveInserter().insert(text);
         getActiveField().requestFocus();
     }
@@ -205,6 +230,24 @@ public class TextInputController implements HasMainController {
     private void handleBackspace() {
         getActiveInserter().delete();
         getActiveField().requestFocus();
+    }
+
+    private boolean isFractionField(TextField field) {
+        return field == numeratorField || field == denominatorField || field == integerField;
+    }
+
+    private static boolean isDigitOrMinus(String s) {
+        if (s == null || s.isEmpty()) return false;
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (!Character.isDigit(c) && c != '-') return false;
+        }
+        return true;
+    }
+
+    private void showHint(String message) {
+        hintLabel.setText(message);
+        hintLabel.setVisible(true);
     }
 
     /**
@@ -225,18 +268,6 @@ public class TextInputController implements HasMainController {
         if (lastFocusedField == denominatorField) return denominatorField;
         if (lastFocusedField == integerField) return integerField;
         return equationInput;
-    }
-
-    /**
-     * Фильтр для полей дроби: только цифры и минус.
-     */
-    private void filterDigitKey(KeyEvent event) {
-        String ch = event.getCharacter();
-        if (ch == null || ch.isEmpty()) return;
-        char c = ch.charAt(0);
-        if (!Character.isDigit(c) && c != '-') {
-            event.consume();
-        }
     }
 
     // Нужны ли скобки вокруг числителя/знаменателя?

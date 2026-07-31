@@ -32,7 +32,7 @@ public final class ExprSimplifier {
             case Expr.Var v -> v;
             case Expr.Group g -> expand(g.inner());
             case Expr.BinOp op -> expandBinOp(op);
-            case Expr.Frac f -> new Expr.Frac(expand(f.num()), expand(f.den()));
+            case Expr.Frac f -> new Expr.Frac(expand(f.num()), expand(f.den()), f.colon());
             case Expr.Equation e -> new Expr.Equation(expand(e.left()), expand(e.right()));
         };
     }
@@ -77,7 +77,7 @@ public final class ExprSimplifier {
             case Expr.Num n -> n;
             case Expr.Var v -> v;
             case Expr.Group g -> new Expr.Group(combine(g.inner(), preferDecimal));
-            case Expr.Frac f -> new Expr.Frac(combine(f.num(), preferDecimal), combine(f.den(), preferDecimal));
+            case Expr.Frac f -> new Expr.Frac(combine(f.num(), preferDecimal), combine(f.den(), preferDecimal), f.colon());
             case Expr.Equation e -> new Expr.Equation(combine(e.left(), preferDecimal), combine(e.right(), preferDecimal));
             case Expr.BinOp op -> combineBinOp(op, preferDecimal);
         };

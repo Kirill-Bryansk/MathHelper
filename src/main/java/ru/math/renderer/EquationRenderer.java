@@ -45,7 +45,16 @@ public class EquationRenderer {
                 nodes.add(createText(")"));
             }
             case Expr.BinOp op -> renderBinOp(op, nodes);
-            case Expr.Frac frac -> nodes.add(createFraction(frac.num(), frac.den()));
+            case Expr.Frac frac -> {
+                if (frac.colon()) {
+                    // Двоеточие рендерится как "a : b", не как дробная черта
+                    renderTo(frac.num(), nodes);
+                    nodes.add(createText(" : "));
+                    renderTo(frac.den(), nodes);
+                } else {
+                    nodes.add(createFraction(frac.num(), frac.den()));
+                }
+            }
         }
     }
 

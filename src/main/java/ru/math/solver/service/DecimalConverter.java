@@ -31,7 +31,7 @@ public final class DecimalConverter {
             case Expr.Group g -> new Expr.Group(convert(g.inner()));
             case Expr.BinOp op -> new Expr.BinOp(
                     convert(op.left()), op.op(), convert(op.right()));
-            case Expr.Frac f -> new Expr.Frac(convert(f.num()), convert(f.den()));
+            case Expr.Frac f -> new Expr.Frac(convert(f.num()), convert(f.den()), f.colon());
             case Expr.Equation e -> new Expr.Equation(convert(e.left()), convert(e.right()));
         };
     }

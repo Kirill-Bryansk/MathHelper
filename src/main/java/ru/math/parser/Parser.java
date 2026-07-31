@@ -52,18 +52,32 @@ public class Parser {
 
     // Уровень: + и -
     private Expr parseAdditive() {
-        Expr left = parseMultiplicative();
+        Expr left = parseDivision();
 
         while (peek().is(TokenType.PLUS) || peek().is(TokenType.MINUS)) {
             String op = advance().value();
-            Expr right = parseMultiplicative();
+            Expr right = parseDivision();
             left = new Expr.BinOp(left, op, right);
         }
 
         return left;
     }
 
-    // Уровень: * и /
+    // Уровень: : (деление на дробь — низкий приоритет)
+    // a : b/c*d → Frac(a, b/c*d) — правая часть это всё выражение из * и /
+    private Expr parseDivision() {
+        Expr left = parseMultiplicative();
+
+        while (peek().is(TokenType.COLON)) {
+            advance();
+            Expr right = parseMultiplicative();
+            left = new Expr.Frac(left, right, true);
+        }
+
+        return left;
+    }
+
+    // Уровень: * и / (дробь — высокий приоритет, слева направо)
     private Expr parseMultiplicative() {
         Expr left = parseUnary();
 
