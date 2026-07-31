@@ -65,19 +65,12 @@ public class TextInputController implements HasMainController {
 
         // equationInput: разрешаем только цифры с физической клавиатуры.
         // Остальные символы — только через экранную клавиатуру.
-        equationInput.addEventFilter(KeyEvent.KEY_TYPED, e -> {
-            String ch = e.getCharacter();
-            if (ch == null || ch.isEmpty()) return;
-            char c = ch.charAt(0);
-            if (!Character.isDigit(c)) {
-                e.consume();
-            }
-        });
+        equationInput.addEventFilter(KeyEvent.KEY_TYPED, e -> filterDigitsOnly(e));
 
-        // Поля дроби: полностью блокируем физическую клавиатуру.
-        integerField.addEventFilter(KeyEvent.KEY_TYPED, e -> e.consume());
-        numeratorField.addEventFilter(KeyEvent.KEY_TYPED, e -> e.consume());
-        denominatorField.addEventFilter(KeyEvent.KEY_TYPED, e -> e.consume());
+        // Поля дроби: разрешаем только цифры с физической клавиатуры.
+        integerField.addEventFilter(KeyEvent.KEY_TYPED, e -> filterDigitsOnly(e));
+        numeratorField.addEventFilter(KeyEvent.KEY_TYPED, e -> filterDigitsOnly(e));
+        denominatorField.addEventFilter(KeyEvent.KEY_TYPED, e -> filterDigitsOnly(e));
 
         // Скрываем подсказку при возврате фокуса на основное поле
         equationInput.focusedProperty().addListener((o, ov, nv) -> {
@@ -234,6 +227,18 @@ public class TextInputController implements HasMainController {
 
     private boolean isFractionField(TextField field) {
         return field == numeratorField || field == denominatorField || field == integerField;
+    }
+
+    /**
+     * Фильтр физической клавиатуры: пропускает только цифры.
+     */
+    private static void filterDigitsOnly(KeyEvent event) {
+        String ch = event.getCharacter();
+        if (ch == null || ch.isEmpty()) return;
+        char c = ch.charAt(0);
+        if (!Character.isDigit(c)) {
+            event.consume();
+        }
     }
 
     private static boolean isDigitOrMinus(String s) {
