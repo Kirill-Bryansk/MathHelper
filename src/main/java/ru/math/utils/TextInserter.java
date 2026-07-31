@@ -9,13 +9,14 @@ import javafx.scene.control.TextField;
  * Особенности:
  * - Если поле в фокусе — вставка по позиции каретки (можно кликнуть в середину).
  * - Если поле НЕ в фокусе (например, нажата кнопка экранной клавиатуры) —
- *   вставка в конец текста.
+ *   вставка по последней запомненной позиции каретки.
  * - Ограничение maxLength: при превышении вставка игнорируется.
  */
 public class TextInserter {
 
     private final TextField target;
     private final int maxLength;
+    private int lastCaretPos = 0;
 
     public TextInserter(TextField target) {
         this(target, Integer.MAX_VALUE);
@@ -24,10 +25,34 @@ public class TextInserter {
     public TextInserter(TextField target, int maxLength) {
         this.target = target;
         this.maxLength = maxLength;
+
+        // Запоминаем позицию каретки при потере фокуса —
+        // чтобы экранная клавиатура вставляла туда, где был курсор.
+        target.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
+            if (!isNowFocused) {
+                int pos = target.getCaretPosition();
+                String text = target.getText();
+                if (pos >= 0 && pos <= text.length()) {
+                    lastCaretPos = pos;
+                }
+            }
+        });
+
+        // Также обновляем при перемещении каретки пока поле в фокусе
+        target.caretPositionProperty().addListener((obs, old, val) -> {
+            if (target.isFocused()) {
+                int pos = val.intValue();
+                String text = target.getText();
+                if (pos >= 0 && pos <= text.length()) {
+                    lastCaretPos = pos;
+                }
+            }
+        });
     }
 
     /**
-     * Возвращает позицию вставки: каретку если поле в фокусе, иначе конец текста.
+     * Возвращает позицию вставки: каретку если поле в фокусе,
+     * иначе последнюю запомненную позицию.
      */
     public int getInsertPosition() {
         String current = target.getText();
@@ -35,11 +60,14 @@ public class TextInserter {
             int pos = target.getCaretPosition();
             if (pos >= 0 && pos <= current.length()) return pos;
         }
+        if (lastCaretPos >= 0 && lastCaretPos <= current.length()) {
+            return lastCaretPos;
+        }
         return current.length();
     }
 
     /**
-     * Вставляет текст в текущую позицию (или в конец, если поле не в фокусе).
+     * Вставляет текст в текущую позицию каретки.
      * Проверяет ограничение по длине.
      */
     public void insert(String text) {
@@ -55,6 +83,7 @@ public class TextInserter {
         target.setText(newText);
 
         int newPos = pos + text.length();
+        lastCaretPos = newPos;
 
         target.requestFocus();
         Platform.runLater(() -> {
@@ -65,7 +94,6 @@ public class TextInserter {
 
     /**
      * Удаляет один символ перед курсором (аналог Backspace).
-     * Если поле не в фокусе — удаляет последний символ.
      */
     public void delete() {
         String current = target.getText();
@@ -78,6 +106,7 @@ public class TextInserter {
         target.setText(newText);
 
         int newPos = pos - 1;
+        lastCaretPos = newPos;
 
         target.requestFocus();
         Platform.runLater(() -> {

@@ -33,7 +33,8 @@ public class TextInputController implements HasMainController {
     @FXML private Label hintLabel;
 
     private static final int EQUATION_MAX_LENGTH = 150;
-    private static final int FRACTION_MAX_LENGTH = 6;
+    private static final int FRACTION_MAX_LENGTH = 50;
+    private static final int INTEGER_MAX_LENGTH = 6;
 
     private MainController mainController;
     private TextInserter equationInserter;
@@ -53,7 +54,7 @@ public class TextInputController implements HasMainController {
         equationInserter = new TextInserter(equationInput, EQUATION_MAX_LENGTH);
         numeratorInserter = new TextInserter(numeratorField, FRACTION_MAX_LENGTH);
         denominatorInserter = new TextInserter(denominatorField, FRACTION_MAX_LENGTH);
-        integerInserter = new TextInserter(integerField, FRACTION_MAX_LENGTH);
+        integerInserter = new TextInserter(integerField, INTEGER_MAX_LENGTH);
 
         // Запоминаем последнее поле в фокусе — нужно для экранной клавиатуры,
         // т.к. клик по кнопке уводит фокус с поля.
@@ -131,6 +132,22 @@ public class TextInputController implements HasMainController {
         // Если ничего не заполнено — выходим
         if (intPart.isEmpty() && num.isEmpty()) return;
 
+        // Валидируем поля дробей через парсер
+        if (!num.isEmpty()) {
+            ParseException numError = validateExpression(num);
+            if (numError != null) {
+                showHint("Ошибка в числителе: " + numError.getMessage());
+                return;
+            }
+        }
+        if (!den.isEmpty()) {
+            ParseException denError = validateExpression(den);
+            if (denError != null) {
+                showHint("Ошибка в знаменателе: " + denError.getMessage());
+                return;
+            }
+        }
+
         // Если есть целая часть, но нет числителя/знаменателя — вставляем просто число
         if (!intPart.isEmpty() && num.isEmpty()) {
             equationInserter.insert(intPart);
@@ -170,6 +187,7 @@ public class TextInputController implements HasMainController {
         hintLabel.setVisible(false);
 
         // Если есть целая часть: 2 3/4 → (2*4+3)/4 = 11/4
+        // Но если числитель/знаменатель — выражения, то (int*den+num)/den
         String fractionText;
         if (!intPart.isEmpty()) {
             try {
@@ -180,11 +198,12 @@ public class TextInputController implements HasMainController {
                 long combined = intVal * denVal + numVal;
                 fractionText = combined + "/" + denVal;
             } catch (NumberFormatException e) {
-                // Не чистые числа — вставляем как (int*num + num)/den через скобки
+                // Не чистые числа — вставляем как (int*den+num)/den через скобки
                 fractionText = "(" + intPart + "*" + den + "+" + num + ")/" + den;
             }
         } else {
-            // Без целой части — как раньше
+            // Без целой части — числитель/знаменатель как есть
+            // Выражения всегда оборачиваем в скобки для корректного парсинга
             String numText = needsParens(num) ? "(" + num + ")" : num;
             String denText = needsParens(den) ? "/(" + den + ")" : "/" + den;
             fractionText = numText + denText;
@@ -193,6 +212,19 @@ public class TextInputController implements HasMainController {
         equationInserter.insert(fractionText);
         clearFractionFields();
         equationInput.requestFocus();
+    }
+
+    /**
+     * Проверяет, что выражение корректно парсится.
+     * @return ParseException если ошибка, null если всё ок
+     */
+    private ParseException validateExpression(String expr) {
+        try {
+            Parser.parse(expr);
+            return null;
+        } catch (ParseException e) {
+            return e;
+        }
     }
 
     private void clearFractionFields() {
@@ -206,10 +238,10 @@ public class TextInputController implements HasMainController {
         Button btn = (Button) e.getSource();
         String text = btn.getText();
 
-        // Если активное поле — поле дроби, разрешаем только цифры и минус
-        if (isFractionField(lastFocusedField)) {
+        // Поле целой части — только цифры и минус
+        if (lastFocusedField == integerField) {
             if (!isDigitOrMinus(text)) {
-                showHint("В поле дроби можно вводить только числа");
+                showHint("В поле целой части можно вводить только числа");
                 return;
             }
             hintLabel.setVisible(false);
@@ -223,10 +255,6 @@ public class TextInputController implements HasMainController {
     private void handleBackspace() {
         getActiveInserter().delete();
         getActiveField().requestFocus();
-    }
-
-    private boolean isFractionField(TextField field) {
-        return field == numeratorField || field == denominatorField || field == integerField;
     }
 
     /**
