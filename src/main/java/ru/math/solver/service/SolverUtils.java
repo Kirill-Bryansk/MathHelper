@@ -117,8 +117,8 @@ public final class SolverUtils {
     // Фабрика шагов
     // ========================
 
-    /** Создаёт Step с описанием и отформатированным уравнением. */
+    /** Создаёт Step с уравнением — UI отрисует его «как в тетради». */
     public static Step step(String description, Expr.Equation eq) {
-        return new Step(description, ExprFormatter.format(eq));
+        return Step.of(description, eq);
     }
 }

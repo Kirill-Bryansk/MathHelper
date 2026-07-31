@@ -7,6 +7,7 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 import ru.math.components.SolutionViewer;
 import ru.math.config.managers.TabLoader;
+import ru.math.solver.Solution;
 
 @Slf4j
 public class MainController {
@@ -32,20 +33,28 @@ public class MainController {
         tabLoader.loadAllTabs();
     }
 
-    // Показать ввод
-    public void showInput(String input) {
-        log.info("[MainController] Отображение решения в SolutionViewer");
-        solutionViewer.displayInput(input);
+    /** Показать решение. */
+    public void showSolution(Solution solution) {
+        log.info("[MainController] Отображение решения");
+        solutionViewer.display(solution);
 
-        // Добавляем в историю
         if (historyController != null) {
-            historyController.addEntry(input);
+            historyController.addEntry(solution.fullText());
         }
 
-        // Переключаемся на первую вкладку
-        if (tabPane.getTabs().size() > 0) {
+        selectFirstTab();
+    }
+
+    /** Показать сообщение об ошибке. */
+    public void showError(String message) {
+        log.warn("[MainController] Ошибка: {}", message);
+        solutionViewer.displayMessage(message);
+        selectFirstTab();
+    }
+
+    private void selectFirstTab() {
+        if (!tabPane.getTabs().isEmpty()) {
             tabPane.getSelectionModel().select(0);
-            log.debug("[MainController] Переключено на первую вкладку");
         }
     }
 

@@ -3,127 +3,129 @@ package ru.math.solver;
 import ru.math.parser.Expr;
 import ru.math.solver.service.ExprAnalyzer;
 import ru.math.solver.service.ExprFormatter;
-import ru.math.solver.service.ExprSimplifier;
 import ru.math.solver.service.LinearCollector;
 import ru.math.solver.service.LinearCollector.Coeffs;
 import ru.math.solver.service.SolverUtils;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * Решатель рациональных уравнений (переменная в знаменателе).
+ *
+ * Отличие от линейного — два дополнительных шага:
+ * находим ОДЗ до решения и проверяем корень по нему после.
  */
 @Slf4j
 public class RationalSolver implements Solver {
 
     @Override
     public Solution solve(Expr.Equation equation) {
-        String original = ExprFormatter.format(equation);
-        log.info("[RationalSolver] Решаем: {}", original);
+        log.info("[RationalSolver] Решаем: {}", ExprFormatter.format(equation));
 
-        boolean preferDecimal = ExprAnalyzer.hasDecimals(equation);
+        SolutionBuilder builder = new SolutionBuilder(equation);
 
-        List<Step> steps = new ArrayList<>();
-        Expr.Equation current = equation;
+        // Шаг 1: ОДЗ — значения, обращающие знаменатель в ноль
+        List<Expr> denominators = collectDenominatorsWithVar(equation);
+        Domain domain = Domain.from(denominators);
 
-        steps.add(new Step("Исходное уравнение", original));
-
-        // Шаг 1: ОДЗ
-        List<Expr> denominators = new ArrayList<>();
-        collectDenominatorsWithVar(current.left(), denominators);
-        collectDenominatorsWithVar(current.right(), denominators);
-
-        List<String> odzConditions = new ArrayList<>();
-        for (Expr den : denominators) {
-            try {
-                Coeffs c = LinearCollector.collect(den);
-                if (!c.a().isZero()) {
-                    Rational val = c.b().mul(Rational.of(-1)).div(c.a());
-                    odzConditions.add("x ≠ " + val);
-                }
-            } catch (Exception e) {
-                odzConditions.add(ExprFormatter.format(den) + " ≠ 0");
-            }
+        if (!domain.isEmpty()) {
+            builder.addText("Находим ОДЗ", domain.describe());
         }
 
-        if (!odzConditions.isEmpty()) {
-            steps.add(new Step("Находим ОДЗ", String.join(", ", odzConditions)));
-        }
-
-        // Шаг 2: cross-multiply
+        // Шаг 2: избавляемся от дробей
         Expr multiplier = buildMultiplier(denominators);
-        current = crossMultiply(current, multiplier);
-        steps.add(SolverUtils.step("Умножаем обе части на " + ExprFormatter.format(multiplier), current));
+        builder.apply("Умножаем обе части на " + ExprFormatter.format(multiplier),
+                      eq -> crossMultiply(eq, multiplier));
 
-        // Шаг 3: раскрытие скобок
-        if (ExprAnalyzer.hasBrackets(current)) {
-            current = SolverUtils.toEquation(ExprSimplifier.expand(current));
-            steps.add(SolverUtils.step("Раскрываем скобки", current));
+        builder.expandBrackets()
+               .combineTerms()
+               .moveTerms();
+
+        // Тождество при непустом ОДЗ — «любое число, кроме...»
+        Coeffs total = builder.coefficients();
+        if (total.a().isZero() && total.b().isZero() && !domain.isEmpty()) {
+            String answer = "x — любое число, кроме " + domain.excludedValues();
+            builder.addText("Проверяем ОДЗ", answer);
+            return builder.solution(answer, null);
         }
 
-        // Шаг 4: упрощение
-        Expr.Equation combined = SolverUtils.toEquation(ExprSimplifier.combine(current, preferDecimal));
-        if (!ExprFormatter.format(combined).equals(ExprFormatter.format(current))) {
-            current = combined;
-            steps.add(SolverUtils.step("Приводим подобные слагаемые", current));
+        // Шаг 3: решаем и проверяем корень по ОДЗ
+        return builder.finish(root -> validateAgainstDomain(builder, domain, root));
+    }
+
+    /** @return причина отбраковки корня либо null, если корень подходит */
+    private String validateAgainstDomain(SolutionBuilder builder, Domain domain, Rational root) {
+        if (domain.isEmpty()) return null;
+
+        if (domain.excludes(root)) {
+            builder.addText("Проверяем ОДЗ", "x = " + root.formatAnswer() + " не входит в ОДЗ");
+            return "Нет решений (корень не входит в ОДЗ)";
         }
 
-        // Шаг 5: перенос
-        current = moveTerms(current, preferDecimal);
-        steps.add(SolverUtils.step("Переносим x влево, числа вправо", current));
+        builder.addText("Проверяем ОДЗ", "x = " + root.formatAnswer() + " входит в ОДЗ");
+        return null;
+    }
 
-        // Шаг 6: упрощение после переноса
-        combined = SolverUtils.toEquation(ExprSimplifier.combine(current, preferDecimal));
-        if (!ExprFormatter.format(combined).equals(ExprFormatter.format(current))) {
-            current = combined;
-            steps.add(SolverUtils.step("Приводим подобные", current));
-        }
+    /**
+     * Область допустимых значений: какие значения x запрещены.
+     * Храним Rational, а не строки — иначе корень приходится
+     * парсить обратно из текста «x ≠ 3/2».
+     */
+    private record Domain(Set<Rational> forbidden, List<String> unresolved) {
 
-        // Шаг 7: решение
-        Coeffs left = LinearCollector.collect(current.left());
-        Coeffs right = LinearCollector.collect(current.right());
-        Coeffs total = left.sub(right);
+        static Domain from(List<Expr> denominators) {
+            Set<Rational> forbidden = new LinkedHashSet<>();
+            List<String> unresolved = new ArrayList<>();
 
-        if (total.a().isZero() && total.b().isZero()) {
-            steps.add(new Step("Проверяем ОДЗ", "x — любое число, кроме " + String.join(", ", odzConditions)));
-            return new Solution(original, steps,
-                    "x — любое число, кроме " + String.join(", ", odzConditions), null);
-        }
-        if (total.a().isZero()) {
-            return new Solution(original, steps, "Нет решений (противоречие)", null);
-        }
-
-        Rational answer = total.b().mul(Rational.of(-1)).div(total.a());
-        steps.add(new Step("Делим на " + total.a(), "x = " + answer.formatAnswer()));
-
-        // Шаг 8: проверка ОДЗ
-        boolean odzOk = true;
-        for (String cond : odzConditions) {
-            String valStr = cond.replace("x ≠ ", "").trim();
-            try {
-                Rational forbidden = parseRational(valStr);
-                if (answer.equals(forbidden)) {
-                    odzOk = false;
-                    break;
+            for (Expr den : denominators) {
+                try {
+                    Coeffs c = LinearCollector.collect(den);
+                    if (!c.a().isZero()) {
+                        forbidden.add(c.b().mul(Rational.of(-1)).div(c.a()));
+                    }
+                } catch (RuntimeException e) {
+                    // Нелинейный знаменатель — записываем условие как есть
+                    unresolved.add(ExprFormatter.format(den) + " ≠ 0");
                 }
-            } catch (Exception ignored) {}
+            }
+            return new Domain(forbidden, unresolved);
         }
 
-        if (!odzOk) {
-            steps.add(new Step("Проверяем ОДЗ", "x = " + answer.formatAnswer() + " не входит в ОДЗ ❌"));
-            return new Solution(original, steps, "Нет решений (корень не входит в ОДЗ)", null);
+        boolean isEmpty() {
+            return forbidden.isEmpty() && unresolved.isEmpty();
         }
 
-        steps.add(new Step("Проверяем ОДЗ", "x = " + answer.formatAnswer() + " входит в ОДЗ ✅"));
+        boolean excludes(Rational value) {
+            return forbidden.contains(value);
+        }
 
-        return new Solution(original, steps, "x = " + answer.formatAnswer(), null);
+        String excludedValues() {
+            return forbidden.stream().map(Rational::toString).collect(Collectors.joining(", "));
+        }
+
+        String describe() {
+            List<String> parts = new ArrayList<>();
+            forbidden.forEach(r -> parts.add("x ≠ " + r));
+            parts.addAll(unresolved);
+            return String.join(", ", parts);
+        }
     }
 
     // ========================
-    // Вспомогательные методы
+    // Работа со знаменателями
     // ========================
+
+    private List<Expr> collectDenominatorsWithVar(Expr.Equation eq) {
+        List<Expr> denominators = new ArrayList<>();
+        collectDenominatorsWithVar(eq.left(), denominators);
+        collectDenominatorsWithVar(eq.right(), denominators);
+        return denominators;
+    }
 
     private void collectDenominatorsWithVar(Expr expr, List<Expr> denoms) {
         switch (expr) {
@@ -143,6 +145,7 @@ public class RationalSolver implements Solver {
 
     private Expr buildMultiplier(List<Expr> denominators) {
         if (denominators.isEmpty()) return new Expr.Num(1);
+
         List<Expr> unique = new ArrayList<>();
         for (Expr d : denominators) {
             String dStr = ExprFormatter.format(d);
@@ -150,6 +153,7 @@ public class RationalSolver implements Solver {
                 unique.add(d);
             }
         }
+
         Expr result = unique.get(0);
         for (int i = 1; i < unique.size(); i++) {
             result = new Expr.BinOp(result, "*", unique.get(i));
@@ -159,7 +163,7 @@ public class RationalSolver implements Solver {
 
     private Expr.Equation crossMultiply(Expr.Equation eq, Expr multiplier) {
         return new Expr.Equation(cancelFractions(eq.left(), multiplier),
-                                  cancelFractions(eq.right(), multiplier));
+                                 cancelFractions(eq.right(), multiplier));
     }
 
     private Expr cancelFractions(Expr expr, Expr multiplier) {
@@ -203,28 +207,5 @@ public class RationalSolver implements Solver {
             return new Expr.Num(1);
 
         return null;
-    }
-
-    private Expr.Equation moveTerms(Expr.Equation eq, boolean preferDecimal) {
-        Coeffs left = LinearCollector.collect(eq.left());
-        Coeffs right = LinearCollector.collect(eq.right());
-        Coeffs total = left.sub(right);
-
-        Expr leftExpr = total.a().isZero()
-                ? new Expr.Num(0)
-                : total.a().isOne()
-                    ? new Expr.Var("x")
-                    : new Expr.BinOp(SolverUtils.rationalToExpr(total.a(), preferDecimal), "*", new Expr.Var("x"));
-
-        Expr rightExpr = SolverUtils.rationalToExpr(total.b().mul(Rational.of(-1)), preferDecimal);
-        return new Expr.Equation(leftExpr, rightExpr);
-    }
-
-    private Rational parseRational(String s) {
-        s = s.trim();
-        int slash = s.indexOf('/');
-        if (slash < 0) return Rational.of(Long.parseLong(s));
-        return Rational.of(Long.parseLong(s.substring(0, slash)),
-                           Long.parseLong(s.substring(slash + 1)));
     }
 }

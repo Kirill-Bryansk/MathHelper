@@ -2,41 +2,29 @@ package ru.math.solver;
 
 import java.util.List;
 
-// Результат решения: шаги, ответ, результат проверки
-public class Solution {
-    private final String originalEquation;
-    private final List<Step> steps;
-    private final String answer;
-    private final String verification;
+/**
+ * Результат решения: исходное уравнение, шаги, ответ.
+ *
+ * @param originalEquation исходное уравнение в текстовом виде
+ * @param steps            пошаговое решение
+ * @param answer           ответ («x = 3» или «Нет решений»)
+ * @param answerValue      точное значение ответа (null, если решений нет или их бесконечно много)
+ */
+public record Solution(String originalEquation, List<Step> steps,
+                       String answer, Rational answerValue) {
 
-    public Solution(String originalEquation, List<Step> steps, String answer, String verification) {
-        this.originalEquation = originalEquation;
-        this.steps = steps;
-        this.answer = answer;
-        this.verification = verification;
-    }
-
-    public String originalEquation() { return originalEquation; }
-    public List<Step> steps() { return steps; }
-    public String answer() { return answer; }
-    public String verification() { return verification; }
-
-    // Полный текст для вывода в SolutionViewer
+    /** Полный текст решения — для истории и экспорта. */
     public String fullText() {
         StringBuilder sb = new StringBuilder();
-        sb.append("📝 Уравнение: ").append(originalEquation).append("\n\n");
+        sb.append("Уравнение: ").append(originalEquation).append("\n\n");
 
         for (int i = 0; i < steps.size(); i++) {
-            sb.append("Шаг ").append(i + 1).append(": ").append(steps.get(i).description()).append("\n");
-            sb.append("  ").append(steps.get(i).equation()).append("\n\n");
+            Step step = steps.get(i);
+            sb.append("Шаг ").append(i + 1).append(": ").append(step.description()).append('\n');
+            sb.append("  ").append(step.text()).append("\n\n");
         }
 
-        sb.append("✅ Ответ: ").append(answer).append("\n\n");
-
-        if (verification != null && !verification.isEmpty()) {
-            sb.append("📐 Проверка:\n").append(verification).append("\n");
-        }
-
+        sb.append("Ответ: ").append(answer);
         return sb.toString();
     }
 }

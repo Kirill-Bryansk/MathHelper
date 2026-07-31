@@ -123,6 +123,73 @@
     -fx-border-radius: 5;
 }
 
+/* --- Тетрадный вид решения --- */
+
+.solution-scroll {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+}
+
+.solution-title {
+    -fx-font-size: 17px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e7b;
+    -fx-padding: 0 0 6 0;
+}
+
+.solution-message {
+    -fx-font-size: 14px;
+    -fx-text-fill: #c0392b;
+    -fx-padding: 10;
+    -fx-background-color: #fdecea;
+    -fx-background-radius: 5;
+}
+
+/* Один шаг решения */
+.step-view {
+    -fx-background-color: #fbfbfd;
+    -fx-background-radius: 6;
+    -fx-border-color: #e8e8f0;
+    -fx-border-radius: 6;
+}
+
+.step-number {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #8a8aa0;
+    -fx-min-width: 18;
+}
+
+.step-description {
+    -fx-font-size: 12px;
+    -fx-text-fill: #8a8aa0;
+}
+
+.step-text {
+    -fx-font-size: 15px;
+    -fx-text-fill: #2c3e7b;
+}
+
+/* Блок ответа */
+.answer-block {
+    -fx-background-color: #eef7ee;
+    -fx-background-radius: 6;
+    -fx-border-color: #c3e0c3;
+    -fx-border-radius: 6;
+}
+
+.answer-caption {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #5a8a5a;
+}
+
+.answer-value {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1e6b1e;
+}
+
 /* Компоненты конструктора */
 .term-editor {
     -fx-background-color: #f8f9fa;

@@ -16,6 +16,7 @@ import ru.math.parser.ParseException;
 import ru.math.parser.Parser;
 import ru.math.solver.Solution;
 import ru.math.solver.SolverFactory;
+import ru.math.utils.FractionBuilder;
 import ru.math.utils.TextInserter;
 
 @Slf4j
@@ -56,42 +57,41 @@ public class TextInputController implements HasMainController {
         denominatorInserter = new TextInserter(denominatorField, FRACTION_MAX_LENGTH);
         integerInserter = new TextInserter(integerField, INTEGER_MAX_LENGTH);
 
-        // Запоминаем последнее поле в фокусе — нужно для экранной клавиатуры,
-        // т.к. клик по кнопке уводит фокус с поля.
         lastFocusedField = equationInput;
-        equationInput.focusedProperty().addListener((o, ov, nv) -> { if (nv) lastFocusedField = equationInput; });
-        numeratorField.focusedProperty().addListener((o, ov, nv) -> { if (nv) lastFocusedField = numeratorField; });
-        denominatorField.focusedProperty().addListener((o, ov, nv) -> { if (nv) lastFocusedField = denominatorField; });
-        integerField.focusedProperty().addListener((o, ov, nv) -> { if (nv) lastFocusedField = integerField; });
-
-        // equationInput: разрешаем только цифры с физической клавиатуры.
-        // Остальные символы — только через экранную клавиатуру.
-        equationInput.addEventFilter(KeyEvent.KEY_TYPED, e -> filterDigitsOnly(e));
-
-        // Поля дроби: разрешаем только цифры с физической клавиатуры.
-        integerField.addEventFilter(KeyEvent.KEY_TYPED, e -> filterDigitsOnly(e));
-        numeratorField.addEventFilter(KeyEvent.KEY_TYPED, e -> filterDigitsOnly(e));
-        denominatorField.addEventFilter(KeyEvent.KEY_TYPED, e -> filterDigitsOnly(e));
+        setupField(equationInput);
+        setupField(numeratorField);
+        setupField(denominatorField);
+        setupField(integerField);
 
         // Скрываем подсказку при возврате фокуса на основное поле
-        equationInput.focusedProperty().addListener((o, ov, nv) -> {
-            if (nv) hintLabel.setVisible(false);
+        equationInput.focusedProperty().addListener((o, ov, focused) -> {
+            if (focused) hintLabel.setVisible(false);
         });
 
-        // Динамический парсинг и рендеринг
-        equationInput.textProperty().addListener((obs, old, newVal) -> {
-            parseAndRender(newVal);
-        });
+        equationInput.textProperty().addListener((obs, old, text) -> parseAndRender(text));
 
         solveButton.setOnAction(e -> onSolve());
         clearButton.setOnAction(e -> onClear());
         equationInput.setOnAction(e -> onSolve());
         insertFractionBtn.setOnAction(e -> insertFraction());
 
-        // Начальное состояние
         errorLabel.setVisible(false);
         hintLabel.setVisible(false);
         solveButton.setDisable(true);
+    }
+
+    /**
+     * Настраивает поле ввода:
+     * - запоминает его как активное при получении фокуса
+     *   (клик по экранной клавиатуре уводит фокус, поэтому нужно помнить последнее);
+     * - с физической клавиатуры пропускает только цифры,
+     *   остальные символы вводятся экранной клавиатурой.
+     */
+    private void setupField(TextField field) {
+        field.focusedProperty().addListener((o, ov, focused) -> {
+            if (focused) lastFocusedField = field;
+        });
+        field.addEventFilter(KeyEvent.KEY_TYPED, TextInputController::filterDigitsOnly);
     }
 
     // Парсинг + рендер + обработка ошибок
@@ -129,89 +129,51 @@ public class TextInputController implements HasMainController {
         String num = numeratorField.getText().trim();
         String den = denominatorField.getText().trim();
 
-        // Если ничего не заполнено — выходим
         if (intPart.isEmpty() && num.isEmpty()) return;
 
-        // Валидируем поля дробей через парсер
-        if (!num.isEmpty()) {
-            ParseException numError = validateExpression(num);
-            if (numError != null) {
-                showHint("Ошибка в числителе: " + numError.getMessage());
-                return;
-            }
-        }
-        if (!den.isEmpty()) {
-            ParseException denError = validateExpression(den);
-            if (denError != null) {
-                showHint("Ошибка в знаменателе: " + denError.getMessage());
-                return;
-            }
-        }
+        // Числитель и знаменатель могут быть выражениями — проверяем их парсером
+        if (!validateFractionField(num, "числителе")) return;
+        if (!validateFractionField(den, "знаменателе")) return;
 
-        // Если есть целая часть, но нет числителя/знаменателя — вставляем просто число
-        if (!intPart.isEmpty() && num.isEmpty()) {
-            equationInserter.insert(intPart);
-            clearFractionFields();
-            equationInput.requestFocus();
-            return;
-        }
+        String fractionText = FractionBuilder.build(intPart, num, den);
+        if (fractionText.isEmpty()) return;
 
-        // Если есть числитель, но нет знаменателя — вставляем просто числитель
-        if (!num.isEmpty() && den.isEmpty()) {
-            String text = needsParens(num) ? "(" + num + ")" : num;
-            if (!intPart.isEmpty()) {
-                text = intPart + "+" + text;
-            }
-            equationInserter.insert(text);
-            clearFractionFields();
-            equationInput.requestFocus();
-            return;
-        }
-
-        // Есть и числитель, и знаменатель
-        // Проверяем символ перед курсором в основном поле
-        String current = equationInput.getText();
-        int pos = equationInserter.getInsertPosition();
-        if (pos > 0 && !current.isEmpty()) {
-            char prev = current.charAt(pos - 1);
-            if (Character.isDigit(prev) || Character.isLetter(prev) || prev == ')') {
-                hintLabel.setText("Перед дробью нужен знак операции (+, -, *, /). " +
-                        "Иначе «" + prev + "» и дробь сольются в одно число.");
-                hintLabel.setVisible(true);
-                equationInput.requestFocus();
-                equationInput.positionCaret(pos);
-                return;
-            }
-        }
+        // Полноценная дробь слипнется с предыдущим числом: 5 и 3/4 → 53/4
+        boolean isFraction = !num.isEmpty() && !den.isEmpty();
+        if (isFraction && !checkNeighbour()) return;
 
         hintLabel.setVisible(false);
-
-        // Если есть целая часть: 2 3/4 → (2*4+3)/4 = 11/4
-        // Но если числитель/знаменатель — выражения, то (int*den+num)/den
-        String fractionText;
-        if (!intPart.isEmpty()) {
-            try {
-                long intVal = Long.parseLong(intPart);
-                long numVal = Long.parseLong(num);
-                long denVal = Long.parseLong(den);
-                // 2 3/4 = (2*4 + 3)/4 = 11/4
-                long combined = intVal * denVal + numVal;
-                fractionText = combined + "/" + denVal;
-            } catch (NumberFormatException e) {
-                // Не чистые числа — вставляем как (int*den+num)/den через скобки
-                fractionText = "(" + intPart + "*" + den + "+" + num + ")/" + den;
-            }
-        } else {
-            // Без целой части — числитель/знаменатель как есть
-            // Выражения всегда оборачиваем в скобки для корректного парсинга
-            String numText = needsParens(num) ? "(" + num + ")" : num;
-            String denText = needsParens(den) ? "/(" + den + ")" : "/" + den;
-            fractionText = numText + denText;
-        }
-
         equationInserter.insert(fractionText);
         clearFractionFields();
         equationInput.requestFocus();
+    }
+
+    /** @return false, если поле не парсится (подсказка уже показана) */
+    private boolean validateFractionField(String value, String fieldName) {
+        if (value.isEmpty()) return true;
+
+        ParseException error = validateExpression(value);
+        if (error == null) return true;
+
+        showHint("Ошибка в " + fieldName + ": " + error.getMessage());
+        return false;
+    }
+
+    /** @return false, если перед курсором символ, с которым дробь сольётся */
+    private boolean checkNeighbour() {
+        String current = equationInput.getText();
+        int pos = equationInserter.getInsertPosition();
+
+        if (pos <= 0 || current.isEmpty()) return true;
+
+        char prev = current.charAt(pos - 1);
+        if (!FractionBuilder.needsOperatorBefore(prev)) return true;
+
+        showHint("Перед дробью нужен знак операции (+, -, *, /). " +
+                 "Иначе «" + prev + "» и дробь сольются в одно число.");
+        equationInput.requestFocus();
+        equationInput.positionCaret(pos);
+        return false;
     }
 
     /**
@@ -283,9 +245,7 @@ public class TextInputController implements HasMainController {
         hintLabel.setVisible(true);
     }
 
-    /**
-     * Возвращает TextInserter для последнего активного поля.
-     */
+    /** TextInserter последнего активного поля. */
     private TextInserter getActiveInserter() {
         if (lastFocusedField == numeratorField) return numeratorInserter;
         if (lastFocusedField == denominatorField) return denominatorInserter;
@@ -293,62 +253,28 @@ public class TextInputController implements HasMainController {
         return equationInserter;
     }
 
-    /**
-     * Возвращает последнее активное TextField (или equationInput по умолчанию).
-     */
+    /** Последнее активное поле (по умолчанию — основное). */
     private TextField getActiveField() {
-        if (lastFocusedField == numeratorField) return numeratorField;
-        if (lastFocusedField == denominatorField) return denominatorField;
-        if (lastFocusedField == integerField) return integerField;
-        return equationInput;
+        return lastFocusedField != null ? lastFocusedField : equationInput;
     }
 
     // Нужны ли скобки вокруг числителя/знаменателя?
-    private boolean needsParens(String s) {
-        if (s.isEmpty()) return false;
-        if (s.startsWith("(") && s.endsWith(")")) return false;
-        if (s.length() == 1 && Character.isLetter(s.charAt(0))) return false;
-        if (isNumeric(s)) return false;
-        return true;
-    }
-
-    private boolean isNumeric(String s) {
-        if (s.isEmpty()) return false;
-        int start = 0;
-        if (s.charAt(0) == '-') {
-            if (s.length() == 1) return false;
-            start = 1;
-        }
-        boolean hasDot = false;
-        for (int i = start; i < s.length(); i++) {
-            char c = s.charAt(i);
-            if (c == '.') {
-                if (hasDot) return false;
-                hasDot = true;
-            } else if (!Character.isDigit(c)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     private void onSolve() {
         String input = equationInput.getText();
         log.info("[TextInputController] Решение: '{}'", input);
 
+        if (mainController == null) return;
+
         try {
             Expr ast = Parser.parse(input);
-            Solution solution = SolverFactory.solve(ast);
+            mainController.showSolution(SolverFactory.solve(ast));
 
-            if (mainController != null) {
-                mainController.showInput(solution.fullText());
-            }
+        } catch (ParseException e) {
+            mainController.showError(e.getMessage());
 
         } catch (Exception e) {
             log.error("[TextInputController] Ошибка при решении: {}", e.getMessage(), e);
-            if (mainController != null) {
-                mainController.showInput("Ошибка: " + e.getMessage());
-            }
+            mainController.showError("Не удалось решить уравнение: " + e.getMessage());
         }
     }
 

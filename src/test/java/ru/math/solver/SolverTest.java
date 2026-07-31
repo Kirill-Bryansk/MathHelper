@@ -106,4 +106,59 @@ class SolverTest {
             assertThat(solve("2*x + 3 = 7").steps()).hasSizeLessThanOrEqualTo(8);
         }
     }
+
+    @Nested
+    @DisplayName("Структура шагов для тетрадного вида")
+    class StepStructure {
+
+        @Test
+        @DisplayName("Шаги с уравнением хранят Expr, а не только строку")
+        void equationStepsCarryExpr() {
+            Solution solution = solve("2*x + 3 = 7");
+
+            long withExpr = solution.steps().stream()
+                    .filter(s -> s.kind() == StepKind.EQUATION)
+                    .filter(s -> s.expr() != null)
+                    .count();
+
+            assertThat(withExpr)
+                    .as("Шаги-уравнения должны нести Expr для рендера дробей чертой")
+                    .isEqualTo(solution.steps().size());
+        }
+
+        @Test
+        @DisplayName("Дробь в шаге остаётся узлом Frac — рендерер нарисует её чертой")
+        void fractionStaysAsFracNode() {
+            Solution solution = solve("x/2 + x/3 = 5");
+
+            boolean hasFrac = solution.steps().stream()
+                    .map(Step::expr)
+                    .filter(java.util.Objects::nonNull)
+                    .anyMatch(SolverTest::containsFrac);
+
+            assertThat(hasFrac).isTrue();
+        }
+
+        @Test
+        @DisplayName("Solution хранит точное значение ответа")
+        void solutionCarriesAnswerValue() {
+            assertThat(solve("2*x = 6").answerValue()).isEqualTo(Rational.of(3));
+        }
+
+        @Test
+        @DisplayName("Нет решений → answerValue пустой")
+        void noSolutionHasNullValue() {
+            assertThat(solve("x = x + 1").answerValue()).isNull();
+        }
+    }
+
+    private static boolean containsFrac(ru.math.parser.Expr expr) {
+        return switch (expr) {
+            case ru.math.parser.Expr.Frac f -> true;
+            case ru.math.parser.Expr.BinOp op -> containsFrac(op.left()) || containsFrac(op.right());
+            case ru.math.parser.Expr.Group g -> containsFrac(g.inner());
+            case ru.math.parser.Expr.Equation e -> containsFrac(e.left()) || containsFrac(e.right());
+            default -> false;
+        };
+    }
 }
