@@ -35,12 +35,19 @@
     <!-- Нижняя панель: дробь и клавиатура, одинаковый размер -->
     <HBox spacing="10">
 
-        <!-- Панель дроби (как в тетради: числитель / черта / знаменатель / кнопка) -->
+        <!-- Панель дроби (как в тетради: целая слева, числитель/черта/знаменатель справа) -->
         <VBox styleClass="fraction-panel" spacing="5" HBox.hgrow="ALWAYS" alignment="CENTER">
-            <TextField fx:id="numeratorField" promptText="Числитель" prefWidth="140" alignment="CENTER"/>
-            <Separator focusTraversable="false"/>
-            <TextField fx:id="denominatorField" promptText="Знаменатель" prefWidth="140" alignment="CENTER"/>
-            <Button fx:id="insertFractionBtn" text="Добавить дробь" styleClass="fraction-insert-btn"/>
+            <HBox spacing="6" alignment="CENTER">  <!-- Изменил на CENTER -->
+                <!-- Целая часть слева -->
+                <TextField fx:id="integerField" promptText="целая" prefWidth="50" alignment="CENTER"/>
+                <!-- Дробь справа: числитель / черта / знаменатель -->
+                <VBox spacing="2" alignment="CENTER">
+                    <TextField fx:id="numeratorField" promptText="числ." prefWidth="200" alignment="CENTER"/>
+                    <Separator focusTraversable="false" prefWidth="100"/>
+                    <TextField fx:id="denominatorField" promptText="знам." prefWidth="200" alignment="CENTER"/>
+                </VBox>
+            </HBox>
+            <Button fx:id="insertFractionBtn" text="Добавить дробь" prefWidth="200" styleClass="fraction-insert-btn" />
         </VBox>
 
         <!-- Клавиатура -->

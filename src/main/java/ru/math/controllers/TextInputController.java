@@ -24,17 +24,19 @@ public class TextInputController implements HasMainController {
     @FXML private TextField equationInput;
     @FXML private Button solveButton;
     @FXML private Button clearButton;
+    @FXML private TextField integerField;
     @FXML private TextField numeratorField;
     @FXML private TextField denominatorField;
     @FXML private Button insertFractionBtn;
     @FXML private VBox equationViewContainer;
-    @FXML private Label errorLabel; // Добавь в FXML!
+    @FXML private Label errorLabel;
     @FXML private Label hintLabel;
 
     private MainController mainController;
     private TextInserter equationInserter;
     private TextInserter numeratorInserter;
     private TextInserter denominatorInserter;
+    private TextInserter integerInserter;
     private EquationView equationView;
     private TextField lastFocusedField;
 
@@ -48,6 +50,7 @@ public class TextInputController implements HasMainController {
         equationInserter = new TextInserter(equationInput);
         numeratorInserter = new TextInserter(numeratorField);
         denominatorInserter = new TextInserter(denominatorField);
+        integerInserter = new TextInserter(integerField);
 
         // Запоминаем последнее поле в фокусе — нужно для экранной клавиатуры,
         // т.к. клик по кнопке уводит фокус с поля.
@@ -55,12 +58,16 @@ public class TextInputController implements HasMainController {
         equationInput.focusedProperty().addListener((o, ov, nv) -> { if (nv) lastFocusedField = equationInput; });
         numeratorField.focusedProperty().addListener((o, ov, nv) -> { if (nv) lastFocusedField = numeratorField; });
         denominatorField.focusedProperty().addListener((o, ov, nv) -> { if (nv) lastFocusedField = denominatorField; });
+        integerField.focusedProperty().addListener((o, ov, nv) -> { if (nv) lastFocusedField = integerField; });
 
-        // Фильтр ввода: только символы с клавиатуры.
-        // KeyEvent срабатывает только для поля в фокусе — не мешает другим полям.
-        equationInput.addEventFilter(KeyEvent.KEY_TYPED, this::filterKey);
-        numeratorField.addEventFilter(KeyEvent.KEY_TYPED, this::filterKey);
-        denominatorField.addEventFilter(KeyEvent.KEY_TYPED, this::filterKey);
+        // equationInput: полностью блокируем физическую клавиатуру.
+        // Ввод только через экранную клавиатуру (TextInserter.insert).
+        equationInput.addEventFilter(KeyEvent.KEY_TYPED, e -> e.consume());
+
+        // Поля дроби: разрешаем только цифры и минус (для отрицательных).
+        integerField.addEventFilter(KeyEvent.KEY_TYPED, e -> filterDigitKey(e));
+        numeratorField.addEventFilter(KeyEvent.KEY_TYPED, e -> filterDigitKey(e));
+        denominatorField.addEventFilter(KeyEvent.KEY_TYPED, e -> filterDigitKey(e));
 
         // Динамический парсинг и рендеринг
         equationInput.textProperty().addListener((obs, old, newVal) -> {
@@ -96,12 +103,11 @@ public class TextInputController implements HasMainController {
 
         } catch (ParseException e) {
             equationView.clear();
-            
+
             if (e.errorType() == ErrorType.UNEXPECTED_END) {
                 errorLabel.setVisible(false);
                 solveButton.setDisable(true);
             } else {
-                log.warn("[TextInputController] Ошибка ввода: {}", e.getMessage());
                 errorLabel.setText(e.getMessage());
                 errorLabel.setVisible(true);
                 solveButton.setDisable(true);
@@ -110,13 +116,35 @@ public class TextInputController implements HasMainController {
     }
 
     private void insertFraction() {
+        String intPart = integerField.getText().trim();
         String num = numeratorField.getText().trim();
         String den = denominatorField.getText().trim();
 
-        if (num.isEmpty()) return;
+        // Если ничего не заполнено — выходим
+        if (intPart.isEmpty() && num.isEmpty()) return;
 
-        // Проверяем символ перед курсором — если цифра/переменная/),
-        // то вставка дроби создаст неоднозначность (3 + 1/3 → 31/3)
+        // Если есть целая часть, но нет числителя/знаменателя — вставляем просто число
+        if (!intPart.isEmpty() && num.isEmpty()) {
+            equationInserter.insert(intPart);
+            clearFractionFields();
+            equationInput.requestFocus();
+            return;
+        }
+
+        // Если есть числитель, но нет знаменателя — вставляем просто числитель
+        if (!num.isEmpty() && den.isEmpty()) {
+            String text = needsParens(num) ? "(" + num + ")" : num;
+            if (!intPart.isEmpty()) {
+                text = intPart + "+" + text;
+            }
+            equationInserter.insert(text);
+            clearFractionFields();
+            equationInput.requestFocus();
+            return;
+        }
+
+        // Есть и числитель, и знаменатель
+        // Проверяем символ перед курсором в основном поле
         String current = equationInput.getText();
         int pos = equationInserter.getInsertPosition();
         if (pos > 0 && !current.isEmpty()) {
@@ -131,24 +159,38 @@ public class TextInputController implements HasMainController {
             }
         }
 
-        // Скрываем подсказку
         hintLabel.setVisible(false);
 
-        // Оборачиваем числитель, если нужно
-        String numText = needsParens(num) ? "(" + num + ")" : num;
-
-        // Оборачиваем знаменатель, если нужно
-        String denText = "";
-        if (!den.isEmpty()) {
-            denText = needsParens(den) ? "/(" + den + ")" : "/" + den;
+        // Если есть целая часть: 2 3/4 → (2*4+3)/4 = 11/4
+        String fractionText;
+        if (!intPart.isEmpty()) {
+            try {
+                long intVal = Long.parseLong(intPart);
+                long numVal = Long.parseLong(num);
+                long denVal = Long.parseLong(den);
+                // 2 3/4 = (2*4 + 3)/4 = 11/4
+                long combined = intVal * denVal + numVal;
+                fractionText = combined + "/" + denVal;
+            } catch (NumberFormatException e) {
+                // Не чистые числа — вставляем как (int*num + num)/den через скобки
+                fractionText = "(" + intPart + "*" + den + "+" + num + ")/" + den;
+            }
+        } else {
+            // Без целой части — как раньше
+            String numText = needsParens(num) ? "(" + num + ")" : num;
+            String denText = needsParens(den) ? "/(" + den + ")" : "/" + den;
+            fractionText = numText + denText;
         }
 
-        String fractionText = numText + denText;
         equationInserter.insert(fractionText);
+        clearFractionFields();
+        equationInput.requestFocus();
+    }
 
+    private void clearFractionFields() {
+        integerField.clear();
         numeratorField.clear();
         denominatorField.clear();
-        equationInput.requestFocus();
     }
 
     @FXML
@@ -171,6 +213,7 @@ public class TextInputController implements HasMainController {
     private TextInserter getActiveInserter() {
         if (lastFocusedField == numeratorField) return numeratorInserter;
         if (lastFocusedField == denominatorField) return denominatorInserter;
+        if (lastFocusedField == integerField) return integerInserter;
         return equationInserter;
     }
 
@@ -180,44 +223,28 @@ public class TextInputController implements HasMainController {
     private TextField getActiveField() {
         if (lastFocusedField == numeratorField) return numeratorField;
         if (lastFocusedField == denominatorField) return denominatorField;
+        if (lastFocusedField == integerField) return integerField;
         return equationInput;
     }
 
     /**
-     * Фильтр клавиатуры: разрешаем только символы с экранной клавиатуры.
-     * Срабатывает только для поля в фокусе.
+     * Фильтр для полей дроби: только цифры и минус.
      */
-    private void filterKey(KeyEvent event) {
+    private void filterDigitKey(KeyEvent event) {
         String ch = event.getCharacter();
         if (ch == null || ch.isEmpty()) return;
         char c = ch.charAt(0);
-        if (!isAllowedChar(c)) {
+        if (!Character.isDigit(c) && c != '-') {
             event.consume();
         }
-    }
-
-    /**
-     * Проверка символа: разрешены только те, что есть на экранной клавиатуре.
-     */
-    private static boolean isAllowedChar(char c) {
-        return (c >= '0' && c <= '9')
-                || c == '+' || c == '-' || c == '*' || c == '/' || c == '='
-                || c == '(' || c == ')' || c == '.'
-                || c == 'x' || c == 'y' || c == 'X' || c == 'Y'
-                || c == 'х' || c == 'у' || c == 'Х' || c == 'У'
-                || Character.isWhitespace(c);
     }
 
     // Нужны ли скобки вокруг числителя/знаменателя?
     private boolean needsParens(String s) {
         if (s.isEmpty()) return false;
-        // Уже в скобках — не надо
         if (s.startsWith("(") && s.endsWith(")")) return false;
-        // Одна переменная — не надо
         if (s.length() == 1 && Character.isLetter(s.charAt(0))) return false;
-        // Проверяем, что строка состоит только из цифр, точки и опционального минуса
         if (isNumeric(s)) return false;
-        // Всё остальное — надо
         return true;
     }
 
@@ -263,8 +290,7 @@ public class TextInputController implements HasMainController {
 
     private void onClear() {
         equationInput.clear();
-        numeratorField.clear();
-        denominatorField.clear();
+        clearFractionFields();
         equationView.clear();
         errorLabel.setVisible(false);
         hintLabel.setVisible(false);
