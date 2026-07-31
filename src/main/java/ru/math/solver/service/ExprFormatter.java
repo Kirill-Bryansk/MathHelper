@@ -4,7 +4,8 @@ import ru.math.parser.Expr;
 
 /**
  * Форматирование Expr в строку.
- * Убирает избыточные скобки: (8x-1)/5 вместо ((8x-1))/(5).
+ * Убирает избыточные скобки: (8*x-1)/5 вместо ((8*x-1))/(5).
+ * Явный знак * для умножения.
  */
 public final class ExprFormatter {
 
@@ -29,14 +30,6 @@ public final class ExprFormatter {
     private static String formatBinOp(Expr.BinOp op) {
         String left = format(op.left());
         String right = format(op.right());
-
-        // Неявное умножение: 2x, 2(x+1), (x+1)x
-        if (op.op().equals("*")) {
-            if (op.right() instanceof Expr.Var || op.right() instanceof Expr.Group) {
-                return left + right;
-            }
-            // (x+1)*2 → не пишем знак, но это редкий случай, оставляем *
-        }
         return left + " " + op.op() + " " + right;
     }
 

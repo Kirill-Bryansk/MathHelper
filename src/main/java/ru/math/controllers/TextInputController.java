@@ -5,6 +5,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 import ru.math.components.EquationView;
@@ -31,8 +32,11 @@ public class TextInputController implements HasMainController {
     @FXML private Label hintLabel;
 
     private MainController mainController;
-    private TextInserter textInserter;
+    private TextInserter equationInserter;
+    private TextInserter numeratorInserter;
+    private TextInserter denominatorInserter;
     private EquationView equationView;
+    private TextField lastFocusedField;
 
     @FXML
     public void initialize() {
@@ -41,7 +45,22 @@ public class TextInputController implements HasMainController {
         equationView = new EquationView();
         equationViewContainer.getChildren().add(equationView);
 
-        textInserter = new TextInserter(equationInput);
+        equationInserter = new TextInserter(equationInput);
+        numeratorInserter = new TextInserter(numeratorField);
+        denominatorInserter = new TextInserter(denominatorField);
+
+        // Запоминаем последнее поле в фокусе — нужно для экранной клавиатуры,
+        // т.к. клик по кнопке уводит фокус с поля.
+        lastFocusedField = equationInput;
+        equationInput.focusedProperty().addListener((o, ov, nv) -> { if (nv) lastFocusedField = equationInput; });
+        numeratorField.focusedProperty().addListener((o, ov, nv) -> { if (nv) lastFocusedField = numeratorField; });
+        denominatorField.focusedProperty().addListener((o, ov, nv) -> { if (nv) lastFocusedField = denominatorField; });
+
+        // Фильтр ввода: только символы с клавиатуры.
+        // KeyEvent срабатывает только для поля в фокусе — не мешает другим полям.
+        equationInput.addEventFilter(KeyEvent.KEY_TYPED, this::filterKey);
+        numeratorField.addEventFilter(KeyEvent.KEY_TYPED, this::filterKey);
+        denominatorField.addEventFilter(KeyEvent.KEY_TYPED, this::filterKey);
 
         // Динамический парсинг и рендеринг
         equationInput.textProperty().addListener((obs, old, newVal) -> {
@@ -99,7 +118,7 @@ public class TextInputController implements HasMainController {
         // Проверяем символ перед курсором — если цифра/переменная/),
         // то вставка дроби создаст неоднозначность (3 + 1/3 → 31/3)
         String current = equationInput.getText();
-        int pos = textInserter.getInsertPosition();
+        int pos = equationInserter.getInsertPosition();
         if (pos > 0 && !current.isEmpty()) {
             char prev = current.charAt(pos - 1);
             if (Character.isDigit(prev) || Character.isLetter(prev) || prev == ')') {
@@ -125,22 +144,68 @@ public class TextInputController implements HasMainController {
         }
 
         String fractionText = numText + denText;
-        textInserter.insert(fractionText);
+        equationInserter.insert(fractionText);
 
         numeratorField.clear();
         denominatorField.clear();
+        equationInput.requestFocus();
     }
 
     @FXML
     private void insertCalcButton(ActionEvent e) {
         Button btn = (Button) e.getSource();
         String text = btn.getText();
-        // Двоеточие нормализуем в слеш для совместимости с парсером
-        if (":".equals(text)) {
-            text = "/";
+        getActiveInserter().insert(text);
+        getActiveField().requestFocus();
+    }
+
+    @FXML
+    private void handleBackspace() {
+        getActiveInserter().delete();
+        getActiveField().requestFocus();
+    }
+
+    /**
+     * Возвращает TextInserter для последнего активного поля.
+     */
+    private TextInserter getActiveInserter() {
+        if (lastFocusedField == numeratorField) return numeratorInserter;
+        if (lastFocusedField == denominatorField) return denominatorInserter;
+        return equationInserter;
+    }
+
+    /**
+     * Возвращает последнее активное TextField (или equationInput по умолчанию).
+     */
+    private TextField getActiveField() {
+        if (lastFocusedField == numeratorField) return numeratorField;
+        if (lastFocusedField == denominatorField) return denominatorField;
+        return equationInput;
+    }
+
+    /**
+     * Фильтр клавиатуры: разрешаем только символы с экранной клавиатуры.
+     * Срабатывает только для поля в фокусе.
+     */
+    private void filterKey(KeyEvent event) {
+        String ch = event.getCharacter();
+        if (ch == null || ch.isEmpty()) return;
+        char c = ch.charAt(0);
+        if (!isAllowedChar(c)) {
+            event.consume();
         }
-        textInserter.insert(text);
-        equationInput.requestFocus();
+    }
+
+    /**
+     * Проверка символа: разрешены только те, что есть на экранной клавиатуре.
+     */
+    private static boolean isAllowedChar(char c) {
+        return (c >= '0' && c <= '9')
+                || c == '+' || c == '-' || c == '*' || c == '/' || c == '='
+                || c == '(' || c == ')' || c == '.'
+                || c == 'x' || c == 'y' || c == 'X' || c == 'Y'
+                || c == 'х' || c == 'у' || c == 'Х' || c == 'У'
+                || Character.isWhitespace(c);
     }
 
     // Нужны ли скобки вокруг числителя/знаменателя?

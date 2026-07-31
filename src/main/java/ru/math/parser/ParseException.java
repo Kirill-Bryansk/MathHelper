@@ -20,6 +20,13 @@ public class ParseException extends RuntimeException {
         this.symbol = symbol;
     }
 
+    public ParseException(ErrorType errorType, int position, String symbol, String secondArg) {
+        super(errorType.format(symbol, secondArg));
+        this.errorType = errorType;
+        this.position = position;
+        this.symbol = symbol;
+    }
+
     public ErrorType errorType() { return errorType; }
     public int position() { return position; }
     public String symbol() { return symbol; }

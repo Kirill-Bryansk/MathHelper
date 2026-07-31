@@ -68,4 +68,29 @@ public class TextInserter {
             target.deselect();
         });
     }
+
+    /**
+     * Удаляет один символ перед курсором (аналог Backspace).
+     */
+    public void delete() {
+        String current = target.getText();
+        int pos = lastCaretPos;
+
+        if (pos < 0 || pos > current.length()) {
+            pos = current.length();
+        }
+        if (pos == 0) return;
+
+        String newText = current.substring(0, pos - 1) + current.substring(pos);
+        target.setText(newText);
+
+        int newPos = pos - 1;
+        lastCaretPos = newPos;
+
+        target.requestFocus();
+        Platform.runLater(() -> {
+            target.positionCaret(newPos);
+            target.deselect();
+        });
+    }
 }

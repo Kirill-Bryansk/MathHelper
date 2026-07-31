@@ -15,7 +15,7 @@ import java.util.List;
 
 /**
  * Рендерит AST (Expr) в визуальные элементы для FlowPane.
- * Стиль — "как в тетради": дроби под чертой, неявное умножение, точные отступы.
+ * Стиль — "как в тетради": дроби под чертой, явный знак * для умножения.
  */
 public class EquationRenderer {
 
@@ -72,18 +72,7 @@ public class EquationRenderer {
         }
 
         renderTo(op.left(), nodes);
-
-        if (op.op().equals("*")) {
-            // Неявное умножение: 2x, 2(x+1), 1/5(x-2), xy
-            // Явное ·: 3 · 1, x · 1/2 (число/дробь справа — чтобы не сливались)
-            if (op.right() instanceof Expr.Num || op.right() instanceof Expr.Frac) {
-                nodes.add(createText(" · "));
-            }
-            // иначе — неявное (без разделителя)
-        } else {
-            nodes.add(createText(" " + op.op() + " "));
-        }
-
+        nodes.add(createText(" " + op.op() + " "));
         renderTo(op.right(), nodes);
     }
 

@@ -3,6 +3,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
@@ -21,7 +22,7 @@
     <Label text="Введите уравнение:" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
 
     <HBox spacing="10">
-        <TextField fx:id="equationInput" promptText="Например: 2x + (3x+1)/(2) = 0" HBox.hgrow="ALWAYS"/>
+        <TextField fx:id="equationInput" promptText="Например: 2*x + (3*x+1)/2 = 0" HBox.hgrow="ALWAYS"/>
         <Button fx:id="solveButton" text="▶ Решить" styleClass="button-success"/>
         <Button fx:id="clearButton" text="🗑 Очистить" styleClass="button-danger"/>
     </HBox>
@@ -31,29 +32,71 @@
     <Label fx:id="errorLabel" text="" style="-fx-text-fill: red; -fx-font-size: 12px;" visible="false"/>
     <Label fx:id="hintLabel" text="" style="-fx-text-fill: #cc8800; -fx-font-size: 12px;" visible="false"/>
 
-    <!-- Нижняя панель: дробь слева, кнопки калькулятора справа -->
+    <!-- Нижняя панель: дробь и клавиатура, одинаковый размер -->
     <HBox spacing="10">
-        <!-- Компактная панель дроби -->
-        <VBox styleClass="fraction-panel" spacing="5" HBox.hgrow="ALWAYS">
-            <HBox spacing="5" alignment="CENTER_LEFT">
-                <TextField fx:id="numeratorField" promptText="Числитель" prefWidth="100"/>
-                <Label text="/" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #555;"/>
-                <TextField fx:id="denominatorField" promptText="Знаменатель" prefWidth="100"/>
-                <Button fx:id="insertFractionBtn" text="Добавить дробь" styleClass="fraction-insert-btn"/>
-            </HBox>
+
+        <!-- Панель дроби (как в тетради: числитель / черта / знаменатель / кнопка) -->
+        <VBox styleClass="fraction-panel" spacing="5" HBox.hgrow="ALWAYS" alignment="CENTER">
+            <TextField fx:id="numeratorField" promptText="Числитель" prefWidth="140" alignment="CENTER"/>
+            <Separator focusTraversable="false"/>
+            <TextField fx:id="denominatorField" promptText="Знаменатель" prefWidth="140" alignment="CENTER"/>
+            <Button fx:id="insertFractionBtn" text="Добавить дробь" styleClass="fraction-insert-btn"/>
         </VBox>
 
-        <!-- Панель кнопок калькулятора -->
-        <GridPane hgap="4" vgap="4" alignment="CENTER" styleClass="calc-panel">
-            <Button text="(" onAction="#insertCalcButton" prefWidth="40" prefHeight="35" styleClass="calc-button"/>
-            <Button text=")" onAction="#insertCalcButton" prefWidth="40" prefHeight="35" styleClass="calc-button" GridPane.columnIndex="1"/>
-            <Button text="." onAction="#insertCalcButton" prefWidth="40" prefHeight="35" styleClass="calc-button" GridPane.columnIndex="2"/>
-            <Button text="+" onAction="#insertCalcButton" prefWidth="40" prefHeight="35" styleClass="calc-button" GridPane.columnIndex="3"/>
+        <!-- Клавиатура -->
+        <GridPane hgap="4" vgap="4" alignment="CENTER" styleClass="calc-panel" HBox.hgrow="ALWAYS">
 
-            <Button text="-" onAction="#insertCalcButton" prefWidth="40" prefHeight="35" styleClass="calc-button" GridPane.rowIndex="1"/>
-            <Button text="*" onAction="#insertCalcButton" prefWidth="40" prefHeight="35" styleClass="calc-button" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
-            <Button text=":" onAction="#insertCalcButton" prefWidth="40" prefHeight="35" styleClass="calc-button" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
-            <Button text="/" onAction="#insertCalcButton" prefWidth="40" prefHeight="35" styleClass="calc-button" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
+            <!-- Ряд 1: 7 8 9 + ( -->
+            <Button text="7" onAction="#insertCalcButton" prefWidth="42" prefHeight="32" styleClass="calc-button"
+                    GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+            <Button text="8" onAction="#insertCalcButton" prefWidth="42" prefHeight="32" styleClass="calc-button"
+                    GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+            <Button text="9" onAction="#insertCalcButton" prefWidth="42" prefHeight="32" styleClass="calc-button"
+                    GridPane.columnIndex="2" GridPane.rowIndex="0"/>
+            <Button text="+" onAction="#insertCalcButton" prefWidth="42" prefHeight="32" styleClass="calc-button-op"
+                    GridPane.columnIndex="3" GridPane.rowIndex="0"/>
+            <Button text="(" onAction="#insertCalcButton" prefWidth="42" prefHeight="32" styleClass="calc-button"
+                    GridPane.columnIndex="4" GridPane.rowIndex="0"/>
+
+            <!-- Ряд 2: 4 5 6 - ) -->
+            <Button text="4" onAction="#insertCalcButton" prefWidth="42" prefHeight="32" styleClass="calc-button"
+                    GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+            <Button text="5" onAction="#insertCalcButton" prefWidth="42" prefHeight="32" styleClass="calc-button"
+                    GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+            <Button text="6" onAction="#insertCalcButton" prefWidth="42" prefHeight="32" styleClass="calc-button"
+                    GridPane.columnIndex="2" GridPane.rowIndex="1"/>
+            <Button text="-" onAction="#insertCalcButton" prefWidth="42" prefHeight="32" styleClass="calc-button-op"
+                    GridPane.columnIndex="3" GridPane.rowIndex="1"/>
+            <Button text=")" onAction="#insertCalcButton" prefWidth="42" prefHeight="32" styleClass="calc-button"
+                    GridPane.columnIndex="4" GridPane.rowIndex="1"/>
+
+            <!-- Ряд 3: 1 2 3 * . -->
+            <Button text="1" onAction="#insertCalcButton" prefWidth="42" prefHeight="32" styleClass="calc-button"
+                    GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+            <Button text="2" onAction="#insertCalcButton" prefWidth="42" prefHeight="32" styleClass="calc-button"
+                    GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+            <Button text="3" onAction="#insertCalcButton" prefWidth="42" prefHeight="32" styleClass="calc-button"
+                    GridPane.columnIndex="2" GridPane.rowIndex="2"/>
+            <Button text="*" onAction="#insertCalcButton" prefWidth="42" prefHeight="32" styleClass="calc-button-op"
+                    GridPane.columnIndex="3" GridPane.rowIndex="2"/>
+            <Button text="." onAction="#insertCalcButton" prefWidth="42" prefHeight="32" styleClass="calc-button"
+                    GridPane.columnIndex="4" GridPane.rowIndex="2"/>
+
+            <!-- Ряд 4: 0 x y / = -->
+            <Button text="0" onAction="#insertCalcButton" prefWidth="42" prefHeight="32" styleClass="calc-button"
+                    GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+            <Button text="x" onAction="#insertCalcButton" prefWidth="42" prefHeight="32" styleClass="calc-button-var"
+                    GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+            <Button text="y" onAction="#insertCalcButton" prefWidth="42" prefHeight="32" styleClass="calc-button-var"
+                    GridPane.columnIndex="2" GridPane.rowIndex="3"/>
+            <Button text="/" onAction="#insertCalcButton" prefWidth="42" prefHeight="32" styleClass="calc-button-op"
+                    GridPane.columnIndex="3" GridPane.rowIndex="3"/>
+            <Button text="=" onAction="#insertCalcButton" prefWidth="42" prefHeight="32" styleClass="calc-button-eq"
+                    GridPane.columnIndex="4" GridPane.rowIndex="3"/>
+
+            <!-- Ряд 5: ⌫ на всю ширину -->
+            <Button text="⌫  Стереть" onAction="#handleBackspace" prefHeight="32" styleClass="calc-button-back"
+                    GridPane.columnIndex="0" GridPane.rowIndex="4" GridPane.columnSpan="5" GridPane.hgrow="ALWAYS"/>
         </GridPane>
     </HBox>
 </VBox>

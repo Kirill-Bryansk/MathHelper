@@ -43,7 +43,6 @@ public class Parser {
         }
 
         // Нет '=' — проверяем, что строка закончилась
-        // Если остались токены — это лишние символы
         if (!peek().is(TokenType.EOF)) {
             throw new ParseException(ErrorType.EXTRA_SYMBOL, peek().position(), peek().value());
         }
@@ -64,7 +63,7 @@ public class Parser {
         return left;
     }
 
-    // Уровень: *, / и неявное умножение
+    // Уровень: * и /
     private Expr parseMultiplicative() {
         Expr left = parseUnary();
 
@@ -81,11 +80,15 @@ public class Parser {
                 Expr right = parseUnary();
                 left = new Expr.Frac(left, right);
 
-            } else if (isImplicitMul(left, t)) {
-                Expr right = parseUnary();
-                left = new Expr.BinOp(left, "*", right);
-
             } else {
+                // Не * и не / — проверяем, не пропущен ли знак умножения.
+                // Если следующий токен — число, переменная или скобка,
+                // это ошибка: 2x → нужно 2*x.
+                if (t.is(TokenType.VARIABLE) || t.is(TokenType.NUMBER) || t.is(TokenType.LPAREN)) {
+                    String prevText = pos > 0 ? tokens.get(pos - 1).value() : "";
+                    throw new ParseException(ErrorType.MISSING_MUL, t.position(),
+                            prevText + t.value(), prevText + "*" + t.value());
+                }
                 break;
             }
         }
@@ -131,36 +134,6 @@ public class Parser {
         } else {
             throw new ParseException(ErrorType.UNEXPECTED_TOKEN, t.position(), t.value());
         }
-    }
-
-    // Проверка неявного умножения
-    // Только: число/скобка перед переменной, или скобка перед скобкой/числом
-    // НО: число перед числом — это ошибка, а не неявное умножение
-    // Контекстно-зависимое неявное умножение
-    private boolean isImplicitMul(Expr leftExpr, Token next) {
-        // После скобки — всё можно: (x+1)5, (x+1)x, (x+1)(y)
-        if (leftExpr instanceof Expr.Group) {
-            return next.is(TokenType.NUMBER) || next.is(TokenType.VARIABLE) || next.is(TokenType.LPAREN);
-        }
-        // После переменной — только переменная или скобка: 2x, x(x+1)
-        if (leftExpr instanceof Expr.Var) {
-            return next.is(TokenType.VARIABLE) || next.is(TokenType.LPAREN);
-        }
-        // После числа — только переменная или скобка: 2x, 2(x+1)
-        // НЕ число после числа: 2 5 — ошибка
-        if (leftExpr instanceof Expr.Num) {
-            return next.is(TokenType.VARIABLE) || next.is(TokenType.LPAREN);
-        }
-        // После дроби — переменная или скобка: 2/5x = (2/5)x, 2/5(x+1)
-        if (leftExpr instanceof Expr.Frac) {
-            return next.is(TokenType.VARIABLE) || next.is(TokenType.LPAREN);
-        }
-        // После бинарной операции (включая унарный минус, преобразованный в 0 - X):
-        // -3x, -3(x+1), 1+2x, 1-2(x+1) — неявное умножение
-        if (leftExpr instanceof Expr.BinOp) {
-            return next.is(TokenType.VARIABLE) || next.is(TokenType.LPAREN);
-        }
-        return false;
     }
 
     // Текущий токен
