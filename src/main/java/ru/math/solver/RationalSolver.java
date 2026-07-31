@@ -118,9 +118,7 @@ public class RationalSolver implements Solver {
 
         steps.add(new Step("Проверяем ОДЗ", "x = " + answer.formatAnswer() + " входит в ОДЗ ✅"));
 
-        String verification = SolverUtils.buildVerification(equation, answer);
-
-        return new Solution(original, steps, "x = " + answer.formatAnswer(), verification);
+        return new Solution(original, steps, "x = " + answer.formatAnswer(), null);
     }
 
     // ========================

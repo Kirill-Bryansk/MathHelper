@@ -77,8 +77,8 @@ public record Rational(long num, long den) {
     // Форматирование десятичной дроби без лишних нулей
     private String formatDecimal(double value) {
         if (value == (long) value) return String.valueOf((long) value);
-        // Округляем до 10 знаков, убираем лишние нули
-        String s = String.format("%.10f", value).replaceAll("0+$", "");
+        // Locale.ROOT — точка как разделитель, независимо от системной локали
+        String s = String.format(java.util.Locale.ROOT, "%.10f", value).replaceAll("0+$", "");
         if (s.endsWith(".")) s = s.substring(0, s.length() - 1);
         return s;
     }

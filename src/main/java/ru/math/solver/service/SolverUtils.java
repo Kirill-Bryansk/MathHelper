@@ -114,24 +114,6 @@ public final class SolverUtils {
     }
 
     // ========================
-    // Текст проверки
-    // ========================
-
-    /** Формирует читаемую строку проверки. */
-    public static String buildVerification(Expr.Equation eq, Rational answer) {
-        try {
-            Rational leftVal = evaluate(eq.left(), answer);
-            Rational rightVal = evaluate(eq.right(), answer);
-            return "Подставляем x = " + answer.formatAnswer() + ":\n" +
-                   "  " + ExprFormatter.format(eq.left()) + " = " + ExprFormatter.format(eq.right()) + "\n" +
-                   "  " + leftVal + " = " + rightVal + " " +
-                   (leftVal.equals(rightVal) ? "✅" : "❌");
-        } catch (Exception e) {
-            return "Проверка не выполнена";
-        }
-    }
-
-    // ========================
     // Фабрика шагов
     // ========================
 

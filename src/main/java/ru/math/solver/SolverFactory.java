@@ -2,6 +2,7 @@ package ru.math.solver;
 
 import ru.math.parser.Expr;
 import ru.math.solver.service.ExprAnalyzer;
+import ru.math.solver.service.ExprNormalizer;
 
 // Определяет тип уравнения и выбирает подходящий решатель
 public class SolverFactory {
@@ -11,12 +12,13 @@ public class SolverFactory {
             throw new IllegalArgumentException("Это не уравнение");
         }
 
-        // Если переменная в знаменателе — рациональное уравнение
-        if (ExprAnalyzer.hasVarInDenominator(eq)) {
+        // Нормализуем только для выбора решателя — сам решатель
+        // получает исходное уравнение и нормализует его отдельным шагом.
+        Expr.Equation normalized = (Expr.Equation) ExprNormalizer.normalize(eq);
+
+        if (ExprAnalyzer.hasVarInDenominator(normalized)) {
             return new RationalSolver().solve(eq);
         }
-
-        // Иначе — линейное
         return new LinearSolver().solve(eq);
     }
 }

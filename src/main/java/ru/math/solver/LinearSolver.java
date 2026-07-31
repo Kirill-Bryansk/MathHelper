@@ -4,6 +4,7 @@ import ru.math.parser.Expr;
 import ru.math.solver.service.DecimalConverter;
 import ru.math.solver.service.ExprAnalyzer;
 import ru.math.solver.service.ExprFormatter;
+import ru.math.solver.service.ExprNormalizer;
 import ru.math.solver.service.ExprSimplifier;
 import ru.math.solver.service.FractionEliminator;
 import ru.math.solver.service.LinearCollector;
@@ -38,47 +39,53 @@ public class LinearSolver implements Solver {
 
         steps.add(new Step("Исходное уравнение", original));
 
-        // Шаг 1: раскрытие скобок
+        // Шаг 1: нормализация — деление на дробь, вложенные дроби, сокращения
+        Expr.Equation normalized = SolverUtils.toEquation(ExprNormalizer.normalize(current));
+        if (changed(current, normalized)) {
+            current = normalized;
+            steps.add(SolverUtils.step("Упрощаем дроби", current));
+        }
+
+        // Шаг 2: раскрытие скобок
         if (ExprAnalyzer.hasBrackets(current)) {
-            current = SolverUtils.toEquation(ExprSimplifier.expand(current));
-            steps.add(SolverUtils.step("Раскрываем скобки", current));
+            Expr.Equation expanded = SolverUtils.toEquation(ExprSimplifier.expand(current));
+            if (changed(current, expanded)) {
+                current = expanded;
+                steps.add(SolverUtils.step("Раскрываем скобки", current));
+            }
         }
 
-        // Шаг 2: упрощение
-        Expr.Equation combined = SolverUtils.toEquation(ExprSimplifier.combine(current, preferDecimal));
-        if (!ExprFormatter.format(combined).equals(ExprFormatter.format(current))) {
-            current = combined;
-            steps.add(SolverUtils.step("Приводим подобные слагаемые", current));
-        }
+        // Шаг 3: упрощение
+        current = addStepIfChanged(steps, current,
+                normalizedCombine(current, preferDecimal),
+                "Приводим подобные слагаемые");
 
-        // Шаг 3: избавление от дробей (только в режиме дробей)
+        // Шаг 4: избавление от дробей (только в режиме дробей)
         if (!preferDecimal && ExprAnalyzer.hasFractions(current)) {
             if (ExprAnalyzer.hasDecimals(current)) {
-                current = SolverUtils.toEquation(DecimalConverter.convert(current));
-                steps.add(SolverUtils.step("Записываем десятичные дроби как обыкновенные", current));
+                current = addStepIfChanged(steps, current,
+                        SolverUtils.toEquation(DecimalConverter.convert(current)),
+                        "Записываем десятичные дроби как обыкновенные");
             }
 
             long lcm = FractionEliminator.findLcm(current);
-            current = FractionEliminator.multiply(current, lcm);
-            steps.add(SolverUtils.step("Умножаем обе части на " + lcm, current));
+            if (lcm > 1) {
+                Expr.Equation multiplied = FractionEliminator.multiply(current, lcm);
+                // Сразу упрощаем — иначе шаг покажет 14 * 171/7 * x с дробью внутри
+                Expr.Equation simplified = SolverUtils.toEquation(
+                        ExprSimplifier.combine(ExprNormalizer.normalize(multiplied), false));
 
-            combined = SolverUtils.toEquation(ExprSimplifier.combine(current, false));
-            if (!ExprFormatter.format(combined).equals(ExprFormatter.format(current))) {
-                current = combined;
-                steps.add(SolverUtils.step("Приводим подобные слагаемые", current));
+                if (changed(current, simplified)) {
+                    current = simplified;
+                    steps.add(SolverUtils.step("Умножаем обе части на " + lcm, current));
+                }
             }
         }
 
-        // Шаг 4: перенос
-        current = moveTerms(current, preferDecimal);
-        steps.add(SolverUtils.step("Переносим x влево, числа вправо", current));
-
-        // Шаг 5: упрощение после переноса
-        combined = SolverUtils.toEquation(ExprSimplifier.combine(current, preferDecimal));
-        if (!ExprFormatter.format(combined).equals(ExprFormatter.format(current))) {
-            current = combined;
-            steps.add(SolverUtils.step("Приводим подобные", current));
-        }
+        // Шаг 5: перенос
+        current = addStepIfChanged(steps, current,
+                moveTerms(current, preferDecimal),
+                "Переносим x влево, числа вправо");
 
         // Шаг 6: анализ результата
         Coeffs left = LinearCollector.collect(current.left());
@@ -94,11 +101,36 @@ public class LinearSolver implements Solver {
 
         // Шаг 7: деление на коэффициент
         Rational answer = total.b().mul(Rational.of(-1)).div(total.a());
-        steps.add(new Step("Делим на " + total.a(), "x = " + answer.formatAnswer()));
+        if (!total.a().isOne()) {
+            steps.add(new Step("Делим обе части на " + total.a(), "x = " + answer.formatAnswer()));
+        }
 
-        String verification = SolverUtils.buildVerification(equation, answer);
+        return new Solution(original, steps, "x = " + answer.formatAnswer(), null);
+    }
 
-        return new Solution(original, steps, "x = " + answer.formatAnswer(), verification);
+    /**
+     * Приведение подобных с последующей нормализацией.
+     * Без нормализации combine оставляет вложенные дроби вида 1026/13/28,
+     * которые читаются неоднозначно.
+     */
+    private Expr.Equation normalizedCombine(Expr.Equation eq, boolean preferDecimal) {
+        Expr combined = ExprSimplifier.combine(eq, preferDecimal);
+        return SolverUtils.toEquation(ExprNormalizer.normalize(combined));
+    }
+
+    /**
+     * Добавляет шаг, только если уравнение действительно изменилось.
+     * Возвращает актуальное уравнение.
+     */
+    private Expr.Equation addStepIfChanged(List<Step> steps, Expr.Equation before,
+                                           Expr.Equation after, String description) {
+        if (!changed(before, after)) return before;
+        steps.add(SolverUtils.step(description, after));
+        return after;
+    }
+
+    private boolean changed(Expr.Equation before, Expr.Equation after) {
+        return !ExprFormatter.format(before).equals(ExprFormatter.format(after));
     }
 
     /**

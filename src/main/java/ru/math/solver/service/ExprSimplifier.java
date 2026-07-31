@@ -77,10 +77,24 @@ public final class ExprSimplifier {
             case Expr.Num n -> n;
             case Expr.Var v -> v;
             case Expr.Group g -> new Expr.Group(combine(g.inner(), preferDecimal));
-            case Expr.Frac f -> new Expr.Frac(combine(f.num(), preferDecimal), combine(f.den(), preferDecimal), f.colon());
+            case Expr.Frac f -> combineFrac(f, preferDecimal);
             case Expr.Equation e -> new Expr.Equation(combine(e.left(), preferDecimal), combine(e.right(), preferDecimal));
             case Expr.BinOp op -> combineBinOp(op, preferDecimal);
         };
+    }
+
+    /**
+     * Пытается свернуть дробь целиком: (19/7 * x * 9)/26 → 171/182 * x.
+     * Если знаменатель содержит переменную — упрощает числитель и знаменатель раздельно.
+     */
+    private static Expr combineFrac(Expr.Frac f, boolean preferDecimal) {
+        try {
+            Coeffs c = LinearCollector.collect(f);
+            return coeffsToExpr(c, preferDecimal);
+        } catch (RuntimeException e) {
+            return new Expr.Frac(combine(f.num(), preferDecimal),
+                                 combine(f.den(), preferDecimal), f.colon());
+        }
     }
 
     /** Совместимость: по умолчанию обыкновенные дроби. */
