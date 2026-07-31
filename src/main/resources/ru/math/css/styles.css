@@ -184,6 +184,31 @@
     -fx-font-weight: bold;
 }
 
+/* Панель вставки дроби */
+.fraction-panel {
+    -fx-border-color: #ddd;
+    -fx-border-radius: 5;
+    -fx-padding: 8;
+    -fx-background-color: #fafafa;
+    -fx-background-radius: 5;
+}
+
+/* Кнопка вставки дроби  */
+.fraction-insert-btn {
+    -fx-background-color: #27ae60;
+    -fx-text-fill: white;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-padding: 5 10 5 10;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+    -fx-cursor: hand;
+}
+
+.fraction-insert-btn:hover {
+    -fx-background-color: #229954;
+}
+
 /* Панель кнопок калькулятора */
 .calc-panel {
     -fx-border-color: #ddd;

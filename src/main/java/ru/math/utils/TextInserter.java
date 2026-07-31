@@ -1,5 +1,6 @@
 package ru.math.utils;
 
+import javafx.application.Platform;
 import javafx.scene.control.TextField;
 
 /**
@@ -16,8 +17,11 @@ public class TextInserter {
 
         // Запоминаем позицию курсора, когда поле теряет фокус
         target.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
-            if (!isNowFocused) {
-                lastCaretPos = target.getCaretPosition();
+            if (!isNowFocused && target.getText() != null) {
+                int pos = target.getCaretPosition();
+                if (pos >= 0 && pos <= target.getText().length()) {
+                    lastCaretPos = pos;
+                }
             }
         });
     }
@@ -53,9 +57,15 @@ public class TextInserter {
         String newText = current.substring(0, pos) + text + current.substring(pos);
         target.setText(newText);
 
-        // Сдвигаем курсор и возвращаем фокус
-        lastCaretPos = pos + text.length();
-        target.positionCaret(lastCaretPos);
+        // Новая позиция курсора — сразу после вставленного текста
+        int newPos = pos + text.length();
+        lastCaretPos = newPos;
+
+        // Сначала возвращаем фокус, потом ставим курсор (иначе positionCaret не сработает)
         target.requestFocus();
+        Platform.runLater(() -> {
+            target.positionCaret(newPos);
+            target.deselect();
+        });
     }
 }

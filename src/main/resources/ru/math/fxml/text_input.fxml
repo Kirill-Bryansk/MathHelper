@@ -34,14 +34,12 @@
     <!-- Нижняя панель: дробь слева, кнопки калькулятора справа -->
     <HBox spacing="10">
         <!-- Компактная панель дроби -->
-        <VBox style="-fx-border-color: #ddd; -fx-border-radius: 5; -fx-padding: 8;" spacing="5" HBox.hgrow="ALWAYS">
-            <Label text="Вставить дробь:" style="-fx-font-size: 11px; -fx-font-weight: bold;"/>
+        <VBox styleClass="fraction-panel" spacing="5" HBox.hgrow="ALWAYS">
             <HBox spacing="5" alignment="CENTER_LEFT">
                 <TextField fx:id="numeratorField" promptText="Числитель" prefWidth="100"/>
                 <Label text="/" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #555;"/>
                 <TextField fx:id="denominatorField" promptText="Знаменатель" prefWidth="100"/>
-                <Button fx:id="insertFractionBtn" text="+" prefWidth="30" prefHeight="30"
-                        style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-padding: 0;"/>
+                <Button fx:id="insertFractionBtn" text="Добавить дробь" styleClass="fraction-insert-btn"/>
             </HBox>
         </VBox>
 
