@@ -26,12 +26,10 @@ public class SolutionViewer extends VBox {
     // Показать уравнение
     public void displayInput(String input) {
         solutionArea.setText("Введено уравнение:\n" + input);
-        System.out.println("Ввод уравнения: " + input);
     }
 
     // Очистить
     public void clear() {
         solutionArea.clear();
-        System.out.println("------clear----------");
     }
 }

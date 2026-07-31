@@ -96,7 +96,5 @@ public record Rational(long num, long den) {
         long num = Math.round(value * den);
         return new Rational(num, den);
     }
-
-
     private static long gcd(long a, long b) { return b == 0 ? a : gcd(b, a % b); }
 }

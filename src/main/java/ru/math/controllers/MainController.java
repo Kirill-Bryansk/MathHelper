@@ -5,7 +5,6 @@ import javafx.scene.control.SplitPane;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
-import ru.math.config.AppConfig;
 import ru.math.components.SolutionViewer;
 import ru.math.config.managers.TabLoader;
 
@@ -31,9 +30,6 @@ public class MainController {
         // Вкладки
         TabLoader tabLoader = new TabLoader(tabPane, this);
         tabLoader.loadAllTabs();
-
-        // Разделитель
-        mainSplitPane.setDividerPositions(AppConfig.SPLIT_DIVIDER_POSITION);
     }
 
     // Показать ввод

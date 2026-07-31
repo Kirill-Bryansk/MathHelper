@@ -61,7 +61,6 @@ public class TextInputController implements HasMainController {
 
     // Парсинг + рендер + обработка ошибок
     private void parseAndRender(String input) {
-        log.debug("[TextInputController] Ввод: '{}'", input);
         if (input == null || input.trim().isEmpty()) {
             equationView.clear();
             errorLabel.setVisible(false);
@@ -75,13 +74,11 @@ public class TextInputController implements HasMainController {
             errorLabel.setVisible(false);
             hintLabel.setVisible(false);
             solveButton.setDisable(false);
-            log.debug("[TextInputController] Рендер успешно обновлён");
 
         } catch (ParseException e) {
             equationView.clear();
             
             if (e.errorType() == ErrorType.UNEXPECTED_END) {
-                log.debug("[TextInputController] Неполный ввод, ждём продолжения");
                 errorLabel.setVisible(false);
                 solveButton.setDisable(true);
             } else {
@@ -124,7 +121,7 @@ public class TextInputController implements HasMainController {
         // Оборачиваем знаменатель, если нужно
         String denText = "";
         if (!den.isEmpty()) {
-            denText = needsParensDen(den) ? "/(" + den + ")" : "/" + den;
+            denText = needsParens(den) ? "/(" + den + ")" : "/" + den;
         }
 
         String fractionText = numText + denText;
@@ -146,42 +143,46 @@ public class TextInputController implements HasMainController {
         equationInput.requestFocus();
     }
 
-    // Нужны ли скобки вокруг числителя?
+    // Нужны ли скобки вокруг числителя/знаменателя?
     private boolean needsParens(String s) {
+        if (s.isEmpty()) return false;
         // Уже в скобках — не надо
         if (s.startsWith("(") && s.endsWith(")")) return false;
-        // Просто число — не надо
-        if (s.matches("-?\\d+(\\.\\d+)?")) return false;
         // Одна переменная — не надо
-        if (s.matches("[xy]")) return false;
+        if (s.length() == 1 && Character.isLetter(s.charAt(0))) return false;
+        // Проверяем, что строка состоит только из цифр, точки и опционального минуса
+        if (isNumeric(s)) return false;
         // Всё остальное — надо
         return true;
     }
 
-    // Нужны ли скобки вокруг знаменателя?
-    private boolean needsParensDen(String s) {
-        // Уже в скобках — не надо
-        if (s.startsWith("(") && s.endsWith(")")) return false;
-        // Просто число — не надо
-        if (s.matches("-?\\d+(\\.\\d+)?")) return false;
-        // Одна переменная — не надо
-        if (s.matches("[xy]")) return false;
-        // Всё остальное — надо
+    private boolean isNumeric(String s) {
+        if (s.isEmpty()) return false;
+        int start = 0;
+        if (s.charAt(0) == '-') {
+            if (s.length() == 1) return false;
+            start = 1;
+        }
+        boolean hasDot = false;
+        for (int i = start; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == '.') {
+                if (hasDot) return false;
+                hasDot = true;
+            } else if (!Character.isDigit(c)) {
+                return false;
+            }
+        }
         return true;
     }
 
     private void onSolve() {
         String input = equationInput.getText();
-        log.info("[TextInputController] Нажата кнопка 'Решить', ввод: '{}'", input);
+        log.info("[TextInputController] Решение: '{}'", input);
 
         try {
             Expr ast = Parser.parse(input);
-            log.info("[TextInputController] AST построен, вызываем SolverFactory");
-            
             Solution solution = SolverFactory.solve(ast);
-
-            log.info("[TextInputController] Решение готово, ответ: {}", solution.answer());
-            log.debug("[TextInputController] Полное решение:\n{}", solution.fullText());
 
             if (mainController != null) {
                 mainController.showInput(solution.fullText());
@@ -212,11 +213,5 @@ public class TextInputController implements HasMainController {
     @Override
     public void setMainController(MainController mainController) {
         this.mainController = mainController;
-    }
-
-    // Проверка: строка заканчивается оператором?
-    private boolean endsWithOperator(String s) {
-        return s.endsWith("+") || s.endsWith("-") || s.endsWith("*") || s.endsWith("/")
-               || s.endsWith(".");
     }
 }

@@ -24,7 +24,4 @@ public class AppConfig {
 
     //Конфиг одной вкладки
     public record TabConfig(String id, String title, String fxmlPath) {}
-
-    //Позиция разделителя
-    public static final double SPLIT_DIVIDER_POSITION = 0.6;
 }

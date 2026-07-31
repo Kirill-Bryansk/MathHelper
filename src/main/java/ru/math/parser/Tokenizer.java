@@ -2,9 +2,7 @@ package ru.math.parser;
 
 import java.util.ArrayList;
 import java.util.List;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 public class Tokenizer {
 
     private static final int MAX_LENGTH = 150;
@@ -37,7 +35,6 @@ public class Tokenizer {
 
     // Главный метод: строка → список токенов
     public List<Token> tokenize() {
-        log.debug("[Tokenizer] Ввод: '{}'", input);
         checkLength();
         List<Token> tokens = new ArrayList<>();
 
@@ -52,8 +49,6 @@ public class Tokenizer {
         }
 
         tokens.add(new Token(TokenType.EOF, "", pos));
-        log.debug("[Tokenizer] Токенов: {}", tokens.size());
-        log.debug("[Tokenizer] Токены: {}", tokens);
         return tokens;
     }
 

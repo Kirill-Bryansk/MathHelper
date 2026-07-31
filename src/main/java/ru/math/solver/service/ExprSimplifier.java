@@ -136,19 +136,6 @@ public final class ExprSimplifier {
      * preferDecimal=false: 93/2 → Frac(93, 2)
      */
     private static Expr rationalToExpr(Rational r, boolean preferDecimal) {
-        if (r.den() == 1) {
-            return new Expr.Num(r.num());
-        }
-        if (preferDecimal && isTerminatingDecimal(r.den())) {
-            return new Expr.Num(r.toDouble());
-        }
-        return new Expr.Frac(new Expr.Num(r.num()), new Expr.Num(r.den()));
-    }
-
-    private static boolean isTerminatingDecimal(long den) {
-        long d = den;
-        while (d % 2 == 0) d /= 2;
-        while (d % 5 == 0) d /= 5;
-        return d == 1;
+        return SolverUtils.rationalToExpr(r, preferDecimal);
     }
 }

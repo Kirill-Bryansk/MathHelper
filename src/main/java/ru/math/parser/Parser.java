@@ -1,12 +1,10 @@
 package ru.math.parser;
 
 import java.util.List;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Сборка AST из токенов.
  */
-@Slf4j
 public class Parser {
 
     private final List<Token> tokens;
@@ -18,11 +16,8 @@ public class Parser {
 
     // Удобный метод: строка → AST
     public static Expr parse(String input) {
-        log.debug("[Parser] Парсинг: '{}'", input);
         List<Token> tokens = new Tokenizer(input).tokenize();
-        Expr result = new Parser(tokens).parse();
-        log.debug("[Parser] AST: {}", result);
-        return result;
+        return new Parser(tokens).parse();
     }
 
     // Главный метод
