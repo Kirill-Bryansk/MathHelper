@@ -50,7 +50,7 @@ $env:Path = "C:\Program Files (x86)\WiX Toolset v3.11\bin;" + $env:Path
 jpackage --name MathHelper --input target/jpackage-input --main-jar MathHelper.jar `
   --main-class ru.math.Launcher --type msi --dest target --app-version 2.0.0 `
   --vendor "MathHelper" --win-menu --win-shortcut --win-dir-chooser `
-  --icon src/main/resources/ru/math/images/icon.png `
+  --icon src/main/resources/ru/math/images/icon.ico `
   --runtime-image "$env:JAVA_HOME"
 ```
 
@@ -61,8 +61,18 @@ jpackage --name MathHelper --input target/jpackage-input --main-jar MathHelper.j
 ```powershell
 jpackage --name MathHelper --input target/jpackage-input --main-jar MathHelper.jar `
   --main-class ru.math.Launcher --type app-image --dest target --app-version 2.0.0 `
-  --vendor "MathHelper" --icon src/main/resources/ru/math/images/icon.png `
+  --vendor "MathHelper" --icon src/main/resources/ru/math/images/icon.ico `
   --runtime-image "$env:JAVA_HOME"
+```
+
+Результат: `target/MathHelper-2.0.0.msi` (~43 MB)
+
+### Вариант 2 — портативная версия (папка с exe)
+
+```powershell
+jpackage --name MathHelper --input target/jpackage-input --main-jar MathHelper.jar `
+  --main-class ru.math.Launcher --type app-image --dest target --app-version 2.0.0 `
+  --vendor "MathHelper" --module-path "javafx-jmods" --add-modules javafx.controls,javafx.fxml
 ```
 
 Результат: папка `target/MathHelper/` с `MathHelper.exe`
@@ -177,13 +187,13 @@ $env:Path = "C:\Program Files (x86)\WiX Toolset v3.11\bin;" + $env:Path
 jpackage --name MathHelper --input target/jpackage-input --main-jar MathHelper.jar `
   --main-class ru.math.Launcher --type msi --dest target --app-version 2.0.0 `
   --vendor "MathHelper" --win-menu --win-shortcut --win-dir-chooser `
-  --icon src/main/resources/ru/math/images/icon.png `
+  --icon src/main/resources/ru/math/images/icon.ico `
   --runtime-image "$env:JAVA_HOME"
 
 # 7. Собрать портативную версию
 jpackage --name MathHelper --input target/jpackage-input --main-jar MathHelper.jar `
   --main-class ru.math.Launcher --type app-image --dest target --app-version 2.0.0 `
-  --vendor "MathHelper" --icon src/main/resources/ru/math/images/icon.png `
+  --vendor "MathHelper" --icon src/main/resources/ru/math/images/icon.ico `
   --runtime-image "$env:JAVA_HOME"
 
 # 8. Проверить, что exe запускается
